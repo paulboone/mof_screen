@@ -7,13 +7,16 @@ import argparse
 import os
 import sys
 
+import subprocess
+
 from mof_screen.lammps_interface_wrappers import Parameters, convert_to_lammps_data_file
 from mof_screen.pack_molecules_into_mof import pack_molecules_into_mof
 
 def gen_mof_flex_ff_rigid_molecule_lammps_config(molecule_path, mof_path, minimum_box_dimension=12.5, num_molecules=1):
     mof_name, _ = os.path.splitext(os.path.basename(mof_path))
     molecule_name, _ = os.path.splitext(os.path.basename(molecule_path))
-    
+
+
     params = Parameters(mof_path)
     params.cutoff = minimum_box_dimension
     params.force_field = "UFF"
@@ -25,6 +28,8 @@ def gen_mof_flex_ff_rigid_molecule_lammps_config(molecule_path, mof_path, minimu
     data_filename = "data.%s" % mof_name
 
     ### GENERATE MOF XYZ FILE FROM LAMMPS DATA FILE
+    mof_xyz_filename = "%s.xyz" % mof_name
+    subprocess.run("lmp_data_to_xyz.py %s > %s" % (data_filename, mof_xyz_filename), shell=True, check=True)
 
     ### GENERATE PACKMOL SCRIPT TO PACK MOF WITH N MOLECULES
     packmol_filename = "packmol_%s_%d_%s.txt" % (mof_name, num_molecules, molecule_name)
@@ -35,7 +40,7 @@ def gen_mof_flex_ff_rigid_molecule_lammps_config(molecule_path, mof_path, minimu
 
 
     ### RUN PACKMOLE TO PACK MOLECULES INTO MOF
-
+    subprocess.run("packmol < %s" % (packmol_filename), shell=True, check=True)
 
 
     ### EXTRACT MOLECULE POSITIONS FROM PACKMOLE OUTPUT AND CREATE LAMMPS DATA FILE
