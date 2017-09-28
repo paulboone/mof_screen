@@ -1,0 +1,10 @@
+.DS_Store
+*.out
+*.csv
+*.html
+*.xlsx
+*.tsv
+*.lammps
+__pycache__
+*.pyc
+*.egg-info
