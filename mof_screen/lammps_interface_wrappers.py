@@ -1,3 +1,6 @@
+from lammps_interface.lammps_main import LammpsSimulation
+from lammps_interface.structure_data import from_CIF, write_CIF
+
 
 class Parameters:
     def __init__(self, cif):
@@ -46,7 +49,7 @@ class Parameters:
         for v in vars(self):
             print('%-15s: %s' % (v, getattr(self, v)))
 
-def convert_to_lammps_data_file(params)
+def convert_to_lammps_data_file(params):
     sim = LammpsSimulation(params)
     cell, graph = from_CIF(params.cif_file)
 
@@ -56,7 +59,7 @@ def convert_to_lammps_data_file(params)
     sim.assign_force_fields()
     sim.compute_simulation_size()
     sim.merge_graphs()
-    if par.output_cif:
+    if params.output_cif:
         print("CIF file requested...")
         write_CIF(graph, cell)
 

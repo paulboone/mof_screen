@@ -13,7 +13,7 @@ setup(
     packages=find_packages(),
     entry_points={
           'console_scripts': [
-              'gen_mof_flex_ff_rigid_molecule_lammps_config = mof_screen.gen_mof_flex_ff_rigid_molecule_lammps_config.cmdline'
+              'gen_mof_flex_ff_rigid_molecule_lammps_config = mof_screen.gen_mof_flex_ff_rigid_molecule_lammps_config:cmdline'
           ]
       },
 )

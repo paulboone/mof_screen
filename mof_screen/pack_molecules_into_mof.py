@@ -1,11 +1,13 @@
 import argparse
 import os
+import re
 import sys
 
-def pack_molecule_into_mof(lamps_data_file, mof_name, molecule_name, num_molecules):
+def pack_molecules_into_mof(lammps_data_file, mof_name, molecule_name, num_molecules):
 
     found_x = False; found_y = False; found_z = False
-    for line in lamps_data_file:
+    for line in lammps_data_file:
+        print(line)
         if re.match(r"^.+ xlo xhi", line, re.IGNORECASE):
             xlo, xhi, _, _ = line.strip().split()
             xlo = float(xlo); xhi = float(xhi)
