@@ -3,7 +3,7 @@ import os
 import re
 import sys
 
-def pack_molecules_into_mof(lammps_data_file, mof_name, molecule_name, num_molecules):
+def pack_molecules_into_mof(lammps_data_file, mof_name, molecule_name, output_name, num_molecules):
 
     found_x = False; found_y = False; found_z = False
     for line in lammps_data_file:
@@ -28,11 +28,10 @@ def pack_molecules_into_mof(lammps_data_file, mof_name, molecule_name, num_molec
         print("Could not find xlo/xhi ylo/yhi zlo/zhi in file!")
         sys.exit(1)
 
-
-    return """
+    s = """
     tolerance 2.0
 
-    output mof_w_molecules.xyz
+    output %s
     filetype xyz
 
     structure %s.xyz
@@ -44,8 +43,9 @@ def pack_molecules_into_mof(lammps_data_file, mof_name, molecule_name, num_molec
       number %d
       inside box %10.5f %10.5f %10.5f %10.5f %10.5f %10.5f
     end structure
-    """ % (mof_name, molecule_name, num_molecules, xlo, ylo, zlo, zhi, yhi, zhi)
+    """ % (output_name, mof_name, molecule_name, num_molecules, xlo, ylo, zlo, zhi, yhi, zhi)
 
+    return s, (xlo, xhi, ylo, yhi, zlo, zhi)
 
 
 def cmdline():

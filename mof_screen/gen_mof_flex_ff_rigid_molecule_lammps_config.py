@@ -10,7 +10,8 @@ import sys
 import subprocess
 
 from mof_screen.lammps_interface_wrappers import Parameters, convert_to_lammps_data_file
-from mof_screen.pack_molecules_into_mof import pack_molecules_into_mof
+from mof_screen import pack_molecules_into_mof
+from mof_screen import packmol_to_lammps
 
 def gen_mof_flex_ff_rigid_molecule_lammps_config(molecule_path, mof_path, minimum_box_dimension=12.5, num_molecules=1):
     mof_name, _ = os.path.splitext(os.path.basename(mof_path))
@@ -33,17 +34,33 @@ def gen_mof_flex_ff_rigid_molecule_lammps_config(molecule_path, mof_path, minimu
 
     ### GENERATE PACKMOL SCRIPT TO PACK MOF WITH N MOLECULES
     packmol_filename = "packmol_%s_%d_%s.txt" % (mof_name, num_molecules, molecule_name)
+    packed_xyz_filename = "mof_w_molecules.xyz"
     with open(data_filename, 'r') as f:
-        packmol_script = pack_molecules_into_mof(f, mof_name, molecule_name, num_molecules)
+        packmol_script, box_dims = pack_molecules_into_mof(f, mof_name, molecule_name, packed_xyz_filename, num_molecules)
     with open(packmol_filename, 'w') as f:
         f.write(packmol_script)
-
 
     ### RUN PACKMOLE TO PACK MOLECULES INTO MOF
     subprocess.run("packmol < %s" % (packmol_filename), shell=True, check=True)
 
-
     ### EXTRACT MOLECULE POSITIONS FROM PACKMOLE OUTPUT AND CREATE LAMMPS DATA FILE
+    with open(packed_xyz_filename, 'r') as f:
+        f.readline()
+        f.readline()
+        xyz_data = []
+        for row in f:
+            row_list = row.strip().split()
+            if int(row_list[0]) > 100:
+                row_list[0] = str(int(row_list[0]) - 100)
+                xyz_data.append(row_list)
+
+        charges = [1,2,1]
+        masses = [15.999, 12.011]
+        rel_bonds = [(1,2),(2,3)]
+        rel_angles = [(1,2,3)]
+        molecule_lammps_data_file = packmol_to_lammps(xyz_data, charges, masses, 3, rel_bonds, rel_angles, box_dims[0:2], box_dims[2:4], box_dims[4:6])
+        print(molecule_lammps_data_file)
+
 
 def cmdline():
     parser = argparse.ArgumentParser("./gen-mof-flex-ff-rigid-molecule-lammps-config.py")
