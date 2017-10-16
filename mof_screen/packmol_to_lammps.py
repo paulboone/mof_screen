@@ -22,7 +22,7 @@ def packmol_to_lammps(xyz_data, charges, masses, atoms_per_molecule, relative_bo
 
     for molecule_num in range(1, num_molecules + 1):
         starting_atom_num = atom_num
-        molecule = xyz_data[(molecule_num - 1) * atoms_per_molecule:molecule_num * atoms_per_molecule + 1]
+        molecule = xyz_data[(molecule_num - 1) * atoms_per_molecule:molecule_num * atoms_per_molecule]
         print(xyz_data, molecule)
         for i, atom in enumerate(molecule):
             print(i,atom)

@@ -17,7 +17,6 @@ def gen_mof_flex_ff_rigid_molecule_lammps_config(molecule_path, mof_path, minimu
     mof_name, _ = os.path.splitext(os.path.basename(mof_path))
     molecule_name, _ = os.path.splitext(os.path.basename(molecule_path))
 
-
     params = Parameters(mof_path)
     params.cutoff = minimum_box_dimension
     params.force_field = "UFF"
@@ -72,5 +71,5 @@ def cmdline():
 
     gen_mof_flex_ff_rigid_molecule_lammps_config(args.molecule_path, args.mof_path,
         minimum_box_dimension=args.minimum_box_dimension,
-        num_molecules=args.num_molecules
+        num_molecules=int(args.num_molecules)
     )
