@@ -13,7 +13,7 @@ from mof_screen.lammps_interface_wrappers import Parameters, convert_to_lammps_d
 from mof_screen import pack_molecules_into_mof
 from mof_screen import packmol_to_lammps
 
-def gen_mof_flex_ff_rigid_molecule_lammps_config(molecule_path, mof_path, minimum_box_dimension=12.5, num_molecules=1):
+def gen_mof_flex_ff_rigid_molecule_lammps_config(molecule_path, mof_path, datafile_path, minimum_box_dimension=12.5, num_molecules=1):
     mof_name, _ = os.path.splitext(os.path.basename(mof_path))
     molecule_name, _ = os.path.splitext(os.path.basename(molecule_path))
 
@@ -53,23 +53,25 @@ def gen_mof_flex_ff_rigid_molecule_lammps_config(molecule_path, mof_path, minimu
                 row_list[0] = str(int(row_list[0]) - 100)
                 xyz_data.append(row_list)
 
-        charges = [1,2,1]
+        charges = [-0.35,0.7,-0.35]
         masses = [15.999, 12.011]
         rel_bonds = [(1,2),(2,3)]
         rel_angles = [(1,2,3)]
         molecule_lammps_data_file = packmol_to_lammps(xyz_data, charges, masses, 3, rel_bonds, rel_angles, box_dims[0:2], box_dims[2:4], box_dims[4:6])
-        print(molecule_lammps_data_file)
+        with open(datafile_path, 'w') as wf:
+            wf.write(molecule_lammps_data_file)
 
 
 def cmdline():
     parser = argparse.ArgumentParser("./gen-mof-flex-ff-rigid-molecule-lammps-config.py")
     parser.add_argument('molecule_path', help="Path to molecule XYZ")
     parser.add_argument('mof_path', help="Path to MOF CIF with P1 symmetry")
+    parser.add_argument('output_file', help="Path to output file")
     parser.add_argument('--minimum-box-dimension', '-d', default=12.5, help="minimum box dimension (angstroms) of extended unit cell")
     parser.add_argument('--num-molecules', '-n', default=1, help="number of molecules to pack into MOF")
     args = parser.parse_args()
 
-    gen_mof_flex_ff_rigid_molecule_lammps_config(args.molecule_path, args.mof_path,
+    gen_mof_flex_ff_rigid_molecule_lammps_config(args.molecule_path, args.mof_path, args.output_file,
         minimum_box_dimension=args.minimum_box_dimension,
         num_molecules=int(args.num_molecules)
     )

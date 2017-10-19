@@ -1,9 +1,5 @@
 import sys
 
-3
-[[0,1],[1,2]]
-[0,1,2]
-
 def packmol_to_lammps(xyz_data, charges, masses, atoms_per_molecule, relative_bonds, relative_angles, xb, yb, zb):
     bond_type = 1
     angle_type = 1
