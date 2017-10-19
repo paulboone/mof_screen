@@ -5,199 +5,119 @@
 # - 1: start after NVT equilibration
 # - 2: start after NVE equilibration
 
-variable restart index 0 'nothing'
-variable        restartAtStep equal ${restart}
-next restart
-variable        restartFileName string ${restart}
-print "Restart at step: ${restartAtStep} "
-print "Restart filename: ${restartFileName} "
+#variable restart index 0 'nothing'
+#variable        restartAtStep equal ${restart}
+#next restart
+#variable        restartFileName string ${restart}
+#print "Restart at step: ${restartAtStep} "
+#print "Restart filename: ${restartFileName} "
 
 
-variable        initialDataFile string propane447_50atm.data
-variable        simTemp equal 258
-
-variable quenchTemp equal ${simTemp} # change if want to quench
+variable        frameworkDataFile string data.IRMOF-1
+variable        gasDataFile string CO2.data
+variable        simTemp equal 298
 
 units           real
 atom_style      full
-dimension       3
 boundary        p p p
 
-neighbor        2 bin  # default
-neigh_modify    every 1 delay 3 check yes
+pair_style      lj/cut/coul/long 12.500
+bond_style      harmonic
+angle_style     hybrid cosine/periodic fourier harmonic
+dihedral_style  harmonic
+improper_style  fourier
+kspace_style    ewald 0.000001
 
-if "${restartAtStep} == 0" then &
-    "read_data       ${initialDataFile}" &
-    "velocity        all create ${simTemp} 123123 dist uniform" &
-else  &
-    "read_restart    ${restartFileName}"
-
+dielectric      1.0
+special_bonds   lj/coul 0.0 0.0 1.0
+pair_modify     tail yes mix arithmetic
+box tilt        large
 timestep        1.0
 
-#################################################################################################
-### use NERD force field
-# Nath, S. K., Escobedo, F. A. & de Pablo, J. J. On the simulation of vapor–liquid equilibria for alkanes. The Journal of Chemical Physics 108, 9905–9911 (1998).
-pair_style      lj/cut 13.8
-pair_modify     mix geometric tail yes
-bond_style      harmonic
-angle_style     harmonic
-#dihedral_style  opls # not needed for propane
-
-# see spreadsheet lammps-config-units.xlsx for sources and calculations for the coefficients
-pair_coeff      1 1 0.2039 3.930 #CH3
-pair_coeff      2 2 0.0910 3.857 #CH2
-
-bond_coeff      1 95.883 1.54
-angle_coeff     1 62.100 114
+#if "${restartAtStep} > 0" then "read_restart    ${restartFileName}"
 
 #################################################################################################
-### divide up box / setup measurement chunks
+### NPT equilibration on framework
 
-variable  bx1 equal   0
-variable  bx2 equal  21
-variable  by1 equal   0
-variable  by2 equal  21
-variable  bz1 equal  0
-variable  bz2 equal 140
-variable  zL equal (v_bz2-v_bz1)/20
+#if "${restartAtStep} > 0" then "jump SELF after_NPT_eq"
+#print "** NPT EQUILIBRATION on framework ** "
 
-region  sink_l block ${bx1} ${bx2} ${by1} ${by2} ${bz1} $(v_bz1 + v_zL) units box
-region  cv_l   block ${bx1} ${bx2} ${by1} ${by2} $(v_bz1 + 2*v_zL) $(v_bz1 + 8*v_zL) units box
-region  source block ${bx1} ${bx2} ${by1} ${by2} $(v_bz1 + 9*v_zL) $(v_bz1 + 11*v_zL) units box
-region  cv_r   block ${bx1} ${bx2} ${by1} ${by2} $(v_bz1 + 12*v_zL) $(v_bz1 + 18*v_zL) units box
-region  sink_r block ${bx1} ${bx2} ${by1} ${by2} $(v_bz1 + 19*v_zL) ${bz2} units box
+read_data       ${frameworkDataFile} group mof
 
-group gcvl dynamic all region cv_l every 1
-group gcvr dynamic all region cv_r every 1
+thermo_style custom step vol temp press density etotal
+thermo         1000 #
+thermo_modify  flush yes
+restart        1000 npt-eq.*.restart
+dump dump1 all xyz 1000 npt-eq.dump.*.xyz
 
-variable chunk_size equal ${zL}/2
-compute dchunks all chunk/atom bin/1d z lower ${chunk_size}
-fix dchunk_avgs  all ave/chunk 100  100  10000 dchunks density/mass file density100_10K.out
+fix INTALL all npt temp ${simTemp} ${simTemp} 50 iso 1 1 50
+run           2000 #1M
+unfix         INTALL
+undump dump1
 
-compute tchunks all chunk/atom bin/1d z lower ${chunk_size}
-fix tchunk_avgs  all ave/chunk 10  1000  10000 tchunks temp file temps10_10K.out
+label after_NPT_eq
 
-# output for calculating angle importance
-compute PE_TOT_ALL all pe
-compute PE_TOT_ANGLE all pe angle
-compute KE_TOT all ke
-fix  PE10 all ave/time 1  10000  10000 c_PE_TOT_ANGLE c_PE_TOT_ALL c_KE_TOT file energy10K.out
 
-# per timestep output for calculating angle importance via fluctuations
-fix  PE1 all ave/time 1  1  1 c_PE_TOT_ANGLE c_PE_TOT_ALL c_KE_TOT file energy1.out
 
 #################################################################################################
 ### NVT equilibration
-if "${restartAtStep} > 0" then "jump SELF after_NVT_eq"
-print "** NVT EQUILIBRATION ** "
+
+#if "${restartAtStep} > 1" then "jump SELF after_NVT_eq"
+#print "** NVT EQUILIBRATION ** "
+
+read_data       ${gasDataFile} add append offset 100 100 100 100 100 group gas
+group CARBONS id 102
+dump carbon_dump carbons atom 1 carbon_positions.atoms
+dump dump_velocities carbons custom/gz 1 atom_coords.txt x y z vx vy vz
+
+
 thermo_style custom step vol temp press density etotal
 thermo         10000
 thermo_modify  flush yes
-restart        1000000 nvt-eq.*.restart
-dump dump1 all xyz 1000000 nvt-eq.dump.*.xyz
+restart        1000 nvt-eq.*.restart
+dump XYZDUMP all xyz 1000 nvt-eq.dump.*.xyz
 
-fix           NVT_eq all nvt temp ${simTemp} ${simTemp} 50
-run           2000000
-unfix         NVT_eq
-undump dump1
-
-
-### OPTIONAL QUENCH STEP
-if "${quenchTemp} == ${simTemp}" then "jump SELF after_NVT_eq"
-print "** NVT QUENCH ** "
-print "Quenching to temp: ${quenchTemp}"
-thermo_style custom step vol temp press density etotal
-thermo         10000
-thermo_modify  flush yes
-restart        10000 nvt-quench.*.restart
-dump dump1 all xyz 10000 nvt-quench.dump.*.xyz
-
-fix           NVT_quench all nvt temp ${quenchTemp} ${quenchTemp} 200
-run           10000
-unfix         NVT_quench
-undump dump1
+fix INTALL all nvt temp ${simTemp} ${simTemp} 50
+run           100000
+unfix INTALL
+undump XYZDUMP
 
 label after_NVT_eq
-#################################################################################################
-### heat flux computes and outputs
-
-compute PE         all pe/atom
-compute KE         all ke/atom
-compute STRESS_p   all stress/atom NULL pair
-compute STRESS_b   all stress/atom NULL bond
-compute STRESS_a   all stress/atom NULL angle
-
-compute J_cvl_p    gcvl heat/flux KE PE STRESS_p
-compute J_cvl_b    gcvl heat/flux KE PE STRESS_b
-compute J_cvl_a    gcvl heat/flux KE PE STRESS_a
-compute J_cvl_i    gcvl heat/flux_improved_atom angle
-
-compute J_cvr_p    gcvr heat/flux KE PE STRESS_p
-compute J_cvr_b    gcvr heat/flux KE PE STRESS_b
-compute J_cvr_a    gcvr heat/flux KE PE STRESS_a
-compute J_cvr_i    gcvr heat/flux_improved_atom angle
-
-variable J_cvl equal (c_J_cvl_p[3]+c_J_cvl_b[3]+c_J_cvl_i[3])
-variable J_cvr equal (c_J_cvr_p[3]+c_J_cvr_b[3]+c_J_cvr_i[3])
-
-fix  J1_10 all ave/time 1  10000  10000 &
-    c_J_cvl_p[6] c_J_cvl_p[3]   &
-    c_J_cvl_b[6] c_J_cvl_b[3]   &
-    c_J_cvl_a[6] c_J_cvl_a[3]   &
-    c_J_cvl_i[3]   &
-    c_J_cvr_p[6] c_J_cvr_p[3]   &
-    c_J_cvr_b[6] c_J_cvr_b[3]   &
-    c_J_cvr_a[6] c_J_cvr_a[3]   &
-    c_J_cvr_i[3]   &
-    file J1_10K.out
-
-fix  J10all all ave/time 1  10000  10000 &
-    c_J_cvl_p[1] c_J_cvl_p[2] c_J_cvl_p[3] c_J_cvl_p[4] c_J_cvl_p[5] c_J_cvl_p[6] &
-    c_J_cvl_b[1] c_J_cvl_b[2] c_J_cvl_b[3] c_J_cvl_b[4] c_J_cvl_b[5] c_J_cvl_b[6] &
-    c_J_cvl_a[1] c_J_cvl_a[2] c_J_cvl_a[3] c_J_cvl_a[4] c_J_cvl_a[5] c_J_cvl_a[6] &
-    c_J_cvl_i[1] c_J_cvl_i[2] c_J_cvl_i[3] &
-    c_J_cvr_p[1] c_J_cvr_p[2] c_J_cvr_p[3] c_J_cvr_p[4] c_J_cvr_p[5] c_J_cvr_p[6] &
-    c_J_cvr_b[1] c_J_cvr_b[2] c_J_cvr_b[3] c_J_cvr_b[4] c_J_cvr_b[5] c_J_cvr_b[6] &
-    c_J_cvr_a[1] c_J_cvr_a[2] c_J_cvr_a[3] c_J_cvr_a[4] c_J_cvr_a[5] c_J_cvr_a[6] &
-    c_J_cvr_i[1] c_J_cvr_i[2] c_J_cvr_i[3] &
-    file J10Kall.out
 
 #################################################################################################
 ### NVE equilibration
 
-if "${restartAtStep} > 1" then "jump SELF after_NVE_eq"
-print "** NVE EQUILIBRATION ** "
-thermo_style custom step vol temp press density etotal v_J_cvl v_J_cvr
+#if "${restartAtStep} > 2" then "jump SELF after_NVE_eq"
+#print "** NVE EQUILIBRATION ** "
+
+thermo_style custom step vol temp press density etotal
 thermo         10000
 thermo_modify  flush yes
 restart        1000000 nve-eq.*.restart
-dump dump2 all xyz 1000000 nve-eq.dump.*.xyz
+dump XYZDUMP all xyz 1000000 nve-eq.dump.*.xyz
 
-fix           NVE_eq all nve
-run           3000000
-unfix         NVE_eq
-undump dump2
+fix INTALL all nve
+run 10000 #00
+unfix INTALL
+
+undump XYZDUMP
+
 label after_NVE_eq
+
+
 
 #################################################################################################
 ### NVE
 
 print "** NVE RUN ** "
-variable cvl_xsection equal (v_bx2-v_bx1)*(v_by2-v_by1)
-variable cvl_volume equal v_cvl_xsection*6*v_zL
 
-variable e_applied equal 0.00020
-variable J_expected equal v_e_applied/v_cvl_xsection
-
-fix source all heat 1 $(2*v_e_applied) region source
-fix sinkl all heat 1 $(-v_e_applied) region sink_l
-fix sinkr all heat 1 $(-v_e_applied) region sink_r
-
-fix heatfluxtest all nve
-
-thermo_style custom step vol temp press density etotal v_J_cvl v_J_cvr
+thermo_style custom step vol temp press density etotal
 thermo         10000
 thermo_modify flush yes
 restart        1000000 nve.*.restart
-dump dump3 all xyz 1000000 nve.dump.*.xyz
-run           40000000
+dump XYZDUMP all xyz 1000000 nve.dump.*.xyz
+fix INTALL all nve
+run           400000# 00
+
+
+##
