@@ -22,7 +22,7 @@ def gen_mof_flex_ff_rigid_molecule_lammps_config(molecule_path, mof_path, datafi
     params.force_field = "UFF"
 
     ### GENERATE LAMMPS DATA FILE FOR MOF WITH FORCE_FIELD PARAMS
-    convert_to_lammps_data_file(params)
+    num_types = convert_to_lammps_data_file(params)
 
     # smit code always outputs lammps data file with name: data.{mof_name}
     data_filename = "data.%s" % mof_name

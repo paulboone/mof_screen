@@ -1,2 +1,2 @@
 from mof_screen.pack_molecules_into_mof import pack_molecules_into_mof
-from mof_screen.packmol_to_lammps import packmol_to_lammps
+from mof_screen.packmol_to_lammps import packmol_to_lammps, generate_lammps_data_file
