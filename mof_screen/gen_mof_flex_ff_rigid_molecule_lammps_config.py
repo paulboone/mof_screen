@@ -13,23 +13,36 @@ from mof_screen.lammps_interface_wrappers import Parameters, convert_to_lammps_d
 from mof_screen import pack_molecules_into_mof
 from mof_screen import packmol_to_lammps
 
-def gen_mof_flex_ff_rigid_molecule_lammps_config(molecule_path, mof_path, gas_lammps_data_file, minimum_box_dimension=12.5, num_molecules=1):
+def gen_mof_flex_ff_rigid_molecule_lammps_config(molecule_path, mof_path, gas_name, minimum_box_dimension=12.5, num_molecules=1):
     mof_name, _ = os.path.splitext(os.path.basename(mof_path))
     molecule_name, _ = os.path.splitext(os.path.basename(molecule_path))
 
     params = Parameters(mof_path)
     params.cutoff = minimum_box_dimension
-    params.force_field = "UFF"
+    params.force_field = "UFF4MOF"
 
     ### GENERATE LAMMPS DATA FILE FOR MOF WITH FORCE_FIELD PARAMS
     num_types = convert_to_lammps_data_file(params)
-    print(len(num_types))
+
+    if gas_name == "CO2":
+        gas_lammps_data_file = "CO2.data"
+        charges = [-0.35,0.7,-0.35]
+        masses = [15.999, 12.011]
+        rel_bonds = [(1,2),(2,3)]
+        rel_angles = [(1,2,3)]
+    elif gas_name == "N2":
+        gas_lammps_data_file = "N2.data"
+        print("N2 not implemented yet")
+        os.exit(1)
+    else:
+        print("Please only use CO2 / N2 not implemented yet")
+        os.exit(1)
+
+    # smit code always outputs lammps data file with name: data.{mof_name}; move this
+    mof_lammps_data_file = "%s.data" % mof_name
+    os.rename("data.%s" % mof_name, mof_lammps_data_file)
+
     ### output LAMMPS modification script
-
-    # smit code always outputs lammps data file with name: data.{mof_name}
-    mof_lammps_data_file = "data.%s" % mof_name
-
-
     with open("modify_lammps.sh", 'w') as f:
         modify_lammps_script = """#!/bin/bash
 if [ -z "$1" ]; then echo "USAGE: ./modify_lammps.sh <config.lammps>" && exit 1; fi
@@ -70,10 +83,7 @@ sed -i ''   -e 's|^variable mofImpropers equal \d*.*$|variable mofImpropers equa
                 row_list[0] = str(int(row_list[0]) - 100)
                 xyz_data.append(row_list)
 
-        charges = [-0.35,0.7,-0.35]
-        masses = [15.999, 12.011]
-        rel_bonds = [(1,2),(2,3)]
-        rel_angles = [(1,2,3)]
+
         molecule_lammps_data_file_contents = packmol_to_lammps(xyz_data, charges, masses, 3, rel_bonds, rel_angles, box_dims[0:2], box_dims[2:4], box_dims[4:6])
         with open(gas_lammps_data_file, 'w') as wf:
             wf.write(molecule_lammps_data_file_contents)
@@ -83,12 +93,12 @@ def cmdline():
     parser = argparse.ArgumentParser("./gen_mof_flex_ff_rigid_molecule_lammps_config.py")
     parser.add_argument('molecule_path', help="Path to molecule XYZ")
     parser.add_argument('mof_path', help="Path to MOF CIF with P1 symmetry")
-    parser.add_argument('output_file', help="Path to output file")
+    parser.add_argument('gas_name', help="name of gas: CO2, N2")
     parser.add_argument('--minimum-box-dimension', '-d', default=12.5, help="minimum box dimension (angstroms) of extended unit cell")
     parser.add_argument('--num-molecules', '-n', default=1, help="number of molecules to pack into MOF")
     args = parser.parse_args()
 
-    gen_mof_flex_ff_rigid_molecule_lammps_config(args.molecule_path, args.mof_path, args.output_file,
+    gen_mof_flex_ff_rigid_molecule_lammps_config(args.molecule_path, args.mof_path, args.gas_name,
         minimum_box_dimension=args.minimum_box_dimension,
         num_molecules=int(args.num_molecules)
     )
