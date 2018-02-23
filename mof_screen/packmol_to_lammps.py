@@ -19,9 +19,8 @@ def packmol_to_lammps(xyz_data, charges, masses, atoms_per_molecule, relative_bo
     for molecule_num in range(1, num_molecules + 1):
         starting_atom_num = atom_num
         molecule = xyz_data[(molecule_num - 1) * atoms_per_molecule:molecule_num * atoms_per_molecule]
-        print(xyz_data, molecule)
+
         for i, atom in enumerate(molecule):
-            print(i,atom)
             atom_id, x, y, z = atom
             atom_tuple = (str(atom_num), str(molecule_num), atom_id, str(charges[i]), x, y, z)
             atoms += [" ".join(atom_tuple)]
@@ -39,29 +38,10 @@ def packmol_to_lammps(xyz_data, charges, masses, atoms_per_molecule, relative_bo
             angles += [" ".join(angle_tuple)]
             angle_num += 1
 
-        return generate_lammps_data_file(masses, atoms, bonds, angles, xb, yb, zb)
+    return generate_lammps_data_file(masses, atoms, bonds, angles, xb, yb, zb)
 
 def generate_lammps_data_file(masses, atoms, bonds, angles, xb, yb, zb):
     mass_lines = [" ".join([str(i + 1),str(t)]) for i, t in enumerate(masses)]
-    for i, atom in enumerate(atoms):
-        # print(i,atom)
-        # atom_id, x, y, z = atom
-        atom_tuple = (str(atom_num), str(molecule_num), atom_id, str(charges[i]), x, y, z)
-        atoms += [" ".join(atom_tuple)]
-        atom_num += 1
-
-    for bond in relative_bonds:
-        abs_bond = [str(starting_atom_num + i - 1) for i in bond]
-        bond_tuple = (str(bond_num), str(bond_type), *abs_bond)
-        bonds += [" ".join(bond_tuple)]
-        bond_num += 1
-
-    for angle in relative_angles:
-        abs_angle = [str(starting_atom_num + i - 1) for i in angle]
-        angle_tuple = (str(angle_num), str(angle_type), *abs_angle)
-        angles += [" ".join(angle_tuple)]
-        angle_num += 1
-
 
     s = ""
     s += "# lammps data file generated from mof_screen/packmol_to_lammps.py\n"
