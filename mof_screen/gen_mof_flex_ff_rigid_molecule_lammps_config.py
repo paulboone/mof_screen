@@ -23,6 +23,18 @@ def gen_mof_flex_ff_rigid_molecule_lammps_config(molecule_path, mof_path, datafi
 
     ### GENERATE LAMMPS DATA FILE FOR MOF WITH FORCE_FIELD PARAMS
     num_types = convert_to_lammps_data_file(params)
+    print(len(num_types))
+    ### output LAMMPS modification script
+    with open("modify_lammps.sh", 'w') as f:
+        modify_lammps_script = """#!/bin/bash
+if [ -z "$1" ]; then echo "USAGE: ./modify_lammps.sh <config.lammps>" && exit 1; fi
+sed -i orig -e 's/^variable mofAtoms equal \d*.*$/variable mofAtoms equal %d/' $1
+sed -i ''   -e 's/^variable mofBonds equal \d*.*$/variable mofBonds equal %d/' ./mof_screen.lammps
+sed -i ''   -e 's/^variable mofAngles equal \d*.*$/variable mofAngles equal %d/' ./mof_screen.lammps
+sed -i ''   -e 's/^variable mofDihedrals equal \d*.*$/variable mofDihedrals equal %d/' ./mof_screen.lammps
+sed -i ''   -e 's/^variable mofImpropers equal \d*.*$/variable mofImpropers equal %d/' ./mof_screen.lammps
+""" % tuple(num_types)
+        f.write(modify_lammps_script)
 
     # smit code always outputs lammps data file with name: data.{mof_name}
     data_filename = "data.%s" % mof_name
