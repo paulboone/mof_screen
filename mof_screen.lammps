@@ -13,9 +13,10 @@
 #print "Restart filename: ${restartFileName} "
 
 
-variable        frameworkDataFile string data.IRMOF-7
-variable        gasDataFile string CO2_a.data
-variable        simTemp equal 298
+variable frameworkDataFile string data.mof
+variable gasDataFile string gas.data
+
+variable simTemp equal 298
 
 units           real
 atom_style      full
