@@ -63,7 +63,7 @@ def gen_mof_flex_ff_rigid_molecule_lammps_config(molecule_path, mof_path, datafi
 
 
 def cmdline():
-    parser = argparse.ArgumentParser("./gen-mof-flex-ff-rigid-molecule-lammps-config.py")
+    parser = argparse.ArgumentParser("./gen_mof_flex_ff_rigid_molecule_lammps_config.py")
     parser.add_argument('molecule_path', help="Path to molecule XYZ")
     parser.add_argument('mof_path', help="Path to MOF CIF with P1 symmetry")
     parser.add_argument('output_file', help="Path to output file")
