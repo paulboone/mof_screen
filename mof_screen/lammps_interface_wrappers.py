@@ -6,7 +6,7 @@ class Parameters:
     def __init__(self, cif):
         # File options
         self.cif_file = cif
-        self.output_cif = True
+        self.output_cif = False
         self.output_raspa = False
 
         # Force field options

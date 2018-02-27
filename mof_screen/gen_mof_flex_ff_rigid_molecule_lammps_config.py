@@ -93,7 +93,7 @@ def cmdline():
     parser = argparse.ArgumentParser("./gen_mof_flex_ff_rigid_molecule_lammps_config.py")
     parser.add_argument('molecule_path', help="Path to molecule XYZ")
     parser.add_argument('mof_path', help="Path to MOF CIF with P1 symmetry")
-    parser.add_argument('gas_name', help="name of gas: CO2, N2")
+    parser.add_argument('gas_name', help="name of gas: CO2 or N2")
     parser.add_argument('--minimum-box-dimension', '-d', default=12.5, help="minimum box dimension (angstroms) of extended unit cell")
     parser.add_argument('--num-molecules', '-n', default=1, help="number of molecules to pack into MOF")
     args = parser.parse_args()

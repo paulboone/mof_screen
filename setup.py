@@ -7,6 +7,7 @@ setup(
     cmdclass=versioneer.get_cmdclass(),
     install_requires=[
         'lammps_interface',
+        'lammps_tools',
     ],
     include_package_data=True,
     packages=find_packages(),
