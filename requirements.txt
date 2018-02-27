@@ -1,3 +1,2 @@
-lammps_tools
 git+https://github.com/peteboyd/lammps_interface
 versioneer
