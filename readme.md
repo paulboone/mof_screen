@@ -12,7 +12,7 @@ Then:
 
 ```
 # this is to override the lammps_interface unversioned setup.py
-pip install networkx == 1.11
+pip install "networkx == 1.11"
 
 pip install -r requirements.txt
 pip install ./
