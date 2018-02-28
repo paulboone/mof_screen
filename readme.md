@@ -23,3 +23,10 @@ pip install ./
 ```
 gen_mof_flex_ff_rigid_molecule_lammps_config --help
 ```
+
+## Examples:
+
+```
+cd examples/CO2_IRMOF-1/
+gen_mof_flex_ff_rigid_molecule_lammps_config ./CO2.xyz IRMOF-1.cif CO2 -n 10
+```
