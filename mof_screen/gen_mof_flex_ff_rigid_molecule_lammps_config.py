@@ -62,7 +62,7 @@ sed -i ''   -e 's|^variable mofImpropers equal \d*.*$|variable mofImpropers equa
     subprocess.run("lmp_data_to_xyz.py %s > %s" % (mof_lammps_data_file, mof_xyz_filename), shell=True, check=True)
 
     ### GENERATE PACKMOL SCRIPT TO PACK MOF WITH N MOLECULES
-    packmol_filename = "packmol_%s_%d_%s.txt" % (mof_name, num_molecules, molecule_name)
+    packmol_filename = "%s_%d_%s.packmol.txt" % (mof_name, num_molecules, molecule_name)
     packed_xyz_filename = "mof_w_molecules.xyz"
     with open(mof_lammps_data_file, 'r') as f:
         packmol_script, box_dims = pack_molecules_into_mof(f, mof_name, molecule_name, packed_xyz_filename, num_molecules)
@@ -87,6 +87,14 @@ sed -i ''   -e 's|^variable mofImpropers equal \d*.*$|variable mofImpropers equa
         molecule_lammps_data_file_contents = packmol_to_lammps(xyz_data, charges, masses, 3, rel_bonds, rel_angles, box_dims[0:2], box_dims[2:4], box_dims[4:6])
         with open(gas_lammps_data_file, 'w') as wf:
             wf.write(molecule_lammps_data_file_contents)
+
+
+    # archive files not needed to run simulation
+    os.makedirs("tmp", exist_ok=True)
+    os.rename("in.%s" % mof_name, "tmp/in.%s" % mof_name)
+    os.rename(packed_xyz_filename, "tmp/%s" % packed_xyz_filename)
+    os.rename(mof_xyz_filename, "tmp/%s" % mof_xyz_filename)
+    os.rename(packmol_filename, "tmp/%s" % packmol_filename)
 
 
 def cmdline():
