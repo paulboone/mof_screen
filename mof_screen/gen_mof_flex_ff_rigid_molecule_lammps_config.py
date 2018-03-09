@@ -5,17 +5,16 @@
 
 import argparse
 import os
+import pkg_resources
 import sys
-
 import subprocess
 
 from mof_screen.lammps_interface_wrappers import Parameters, convert_to_lammps_data_file
 from mof_screen import pack_molecules_into_mof
 from mof_screen import packmol_to_lammps
 
-def gen_mof_flex_ff_rigid_molecule_lammps_config(molecule_path, mof_path, gas_name, minimum_box_dimension=12.5, num_molecules=1):
+def gen_mof_flex_ff_rigid_molecule_lammps_config(mof_path, gas_name, minimum_box_dimension=12.5, num_molecules=1):
     mof_name, _ = os.path.splitext(os.path.basename(mof_path))
-    molecule_name, _ = os.path.splitext(os.path.basename(molecule_path))
 
     params = Parameters(mof_path)
     params.cutoff = minimum_box_dimension
@@ -37,6 +36,8 @@ def gen_mof_flex_ff_rigid_molecule_lammps_config(molecule_path, mof_path, gas_na
     else:
         print("Please only use CO2 / N2 not implemented yet")
         os.exit(1)
+
+    gas_path = pkg_resources.resource_filename(__name__, "%s.xyz" % gas_name)
 
     # smit code always outputs lammps data file with name: data.{mof_name}; move this
     mof_lammps_data_file = "%s.data" % mof_name
@@ -62,10 +63,10 @@ sed -i ''   -e 's|^variable mofImpropers equal \d*.*$|variable mofImpropers equa
     subprocess.run("lmp_data_to_xyz.py %s > %s" % (mof_lammps_data_file, mof_xyz_filename), shell=True, check=True)
 
     ### GENERATE PACKMOL SCRIPT TO PACK MOF WITH N MOLECULES
-    packmol_filename = "%s_%d_%s.packmol.txt" % (mof_name, num_molecules, molecule_name)
+    packmol_filename = "%s_%d_%s.packmol.txt" % (mof_name, num_molecules, gas_name)
     packed_xyz_filename = "mof_w_molecules.xyz"
     with open(mof_lammps_data_file, 'r') as f:
-        packmol_script, box_dims = pack_molecules_into_mof(f, mof_name, molecule_name, packed_xyz_filename, num_molecules)
+        packmol_script, box_dims = pack_molecules_into_mof(f, mof_name, gas_path, packed_xyz_filename, num_molecules)
     with open(packmol_filename, 'w') as f:
         f.write(packmol_script)
 
@@ -99,14 +100,13 @@ sed -i ''   -e 's|^variable mofImpropers equal \d*.*$|variable mofImpropers equa
 
 def cmdline():
     parser = argparse.ArgumentParser("./gen_mof_flex_ff_rigid_molecule_lammps_config.py")
-    parser.add_argument('molecule_path', help="Path to molecule XYZ")
     parser.add_argument('mof_path', help="Path to MOF CIF with P1 symmetry")
     parser.add_argument('gas_name', help="name of gas: CO2 or N2")
     parser.add_argument('--minimum-box-dimension', '-d', default=12.5, help="minimum box dimension (angstroms) of extended unit cell")
     parser.add_argument('--num-molecules', '-n', default=1, help="number of molecules to pack into MOF")
     args = parser.parse_args()
 
-    gen_mof_flex_ff_rigid_molecule_lammps_config(args.molecule_path, args.mof_path, args.gas_name,
+    gen_mof_flex_ff_rigid_molecule_lammps_config(args.mof_path, args.gas_name,
         minimum_box_dimension=args.minimum_box_dimension,
         num_molecules=int(args.num_molecules)
     )

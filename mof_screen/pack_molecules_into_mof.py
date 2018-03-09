@@ -3,7 +3,7 @@ import os
 import re
 import sys
 
-def pack_molecules_into_mof(lammps_data_file, mof_name, molecule_name, output_name, num_molecules):
+def pack_molecules_into_mof(lammps_data_file, mof_name, gas_path, output_name, num_molecules):
 
     found_x = False; found_y = False; found_z = False
     for line in lammps_data_file:
@@ -39,11 +39,11 @@ def pack_molecules_into_mof(lammps_data_file, mof_name, molecule_name, output_na
       fixed 0 0 0 0 0 0
     end structure
 
-    structure %s.xyz
+    structure %s
       number %d
       inside box %10.5f %10.5f %10.5f %10.5f %10.5f %10.5f
     end structure
-    """ % (output_name, mof_name, molecule_name, num_molecules, xlo, ylo, zlo, zhi, yhi, zhi)
+    """ % (output_name, mof_name, gas_path, num_molecules, xlo, ylo, zlo, zhi, yhi, zhi)
 
     return s, (xlo, xhi, ylo, yhi, zlo, zhi)
 
