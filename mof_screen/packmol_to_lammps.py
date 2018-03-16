@@ -1,9 +1,15 @@
 import sys
 
 def packmol_to_lammps(xyz_data, charges, masses, atoms_per_molecule, relative_bonds, relative_angles, xb, yb, zb):
-    bond_type = 1
-    angle_type = 1
-
+    """
+    Takes successive molecules, i.e. groups of atoms_per_molecule atoms from the XYZ data...
+    Then for each atom in a molecule, create a tuple consisting of:
+    - atom number
+    - molecule number
+    - atom type
+    - charge
+    - coords x,y,z
+    """
     atoms = []
     bonds = []
     angles = []
@@ -21,20 +27,25 @@ def packmol_to_lammps(xyz_data, charges, masses, atoms_per_molecule, relative_bo
         molecule = xyz_data[(molecule_num - 1) * atoms_per_molecule:molecule_num * atoms_per_molecule]
 
         for i, atom in enumerate(molecule):
-            atom_id, x, y, z = atom
-            atom_tuple = (str(atom_num), str(molecule_num), atom_id, str(charges[i]), x, y, z)
+            atom_type, x, y, z = atom
+            atom_tuple = (str(atom_num), str(molecule_num), atom_type, str(charges[i]), x, y, z)
             atoms += [" ".join(atom_tuple)]
             atom_num += 1
 
         for bond in relative_bonds:
-            abs_bond = [str(starting_atom_num + i - 1) for i in bond]
-            bond_tuple = (str(bond_num), str(bond_type), *abs_bond)
+            bond_type, atom1, atom2 = bond
+            atom1 = starting_atom_num + atom1 - 1
+            atom2 = starting_atom_num + atom2 - 1
+            bond_tuple = (str(bond_num), str(bond_type), str(atom1), str(atom2))
             bonds += [" ".join(bond_tuple)]
             bond_num += 1
 
         for angle in relative_angles:
-            abs_angle = [str(starting_atom_num + i - 1) for i in angle]
-            angle_tuple = (str(angle_num), str(angle_type), *abs_angle)
+            angle_type, atom1, atom2, atom3 = angle
+            atom1 = starting_atom_num + atom1 - 1
+            atom2 = starting_atom_num + atom2 - 1
+            atom3 = starting_atom_num + atom3 - 1
+            angle_tuple = (str(angle_num), str(angle_type), str(atom1), str(atom2), str(atom3))
             angles += [" ".join(angle_tuple)]
             angle_num += 1
 
@@ -52,11 +63,11 @@ def generate_lammps_data_file(masses, atoms, bonds, angles, xb, yb, zb):
 0 dihedrals
 0 impropers
 %d atom types
-1 bond types
-1 angle types
+%d bond types
+%d angle types
 0 dihedral types
 0 improper types
-""" % len(masses)
+""" % (len(masses), len(bonds), len(angles))
 
     s += "%.5f %10.5f xlo xhi\n" % xb
     s += "%.5f %10.5f ylo yhi\n" % yb
@@ -64,7 +75,9 @@ def generate_lammps_data_file(masses, atoms, bonds, angles, xb, yb, zb):
 
     s += "\n\n Masses\n\n" + "\n".join(mass_lines)
     s += "\n\n Atoms\n\n" + "\n".join(atoms)
-    s += "\n\n Bonds\n\n" + "\n".join(bonds)
-    s += "\n\n Angles\n\n" + "\n".join(angles)
+    if bonds:
+        s += "\n\n Bonds\n\n" + "\n".join(bonds)
+    if angles:
+        s += "\n\n Angles\n\n" + "\n".join(angles)
 
     return s

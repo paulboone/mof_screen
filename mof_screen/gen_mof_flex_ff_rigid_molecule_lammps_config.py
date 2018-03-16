@@ -27,14 +27,18 @@ def gen_mof_flex_ff_rigid_molecule_lammps_config(mof_path, gas_name, minimum_box
         gas_lammps_data_file = "CO2.data"
         charges = [-0.35,0.7,-0.35]
         masses = [15.999, 12.011]
-        rel_bonds = [(1,2),(2,3)]
-        rel_angles = [(1,2,3)]
+        rel_bonds = [(1,1,2),(1,2,3)]
+        rel_angles = [(1,1,2,3)]
     elif gas_name == "N2":
         gas_lammps_data_file = "N2.data"
         print("N2 not implemented yet")
         os.exit(1)
+    elif gas_name == "N2pc":
+        gas_lammps_data_file = "N2pc.data"
+        print("N2pc (N2 partical charge) not implemented yet")
+        os.exit(1)
     else:
-        print("Please only use CO2 / N2 not implemented yet")
+        print("Please only use CO2 / N2 / N2pc")
         os.exit(1)
 
     gas_path = pkg_resources.resource_filename(__name__, "%s.xyz" % gas_name)
@@ -47,7 +51,7 @@ def gen_mof_flex_ff_rigid_molecule_lammps_config(mof_path, gas_name, minimum_box
     with open("modify_lammps.sh", 'w') as f:
         modify_lammps_script = """#!/bin/bash
 if [ -z "$1" ]; then echo "USAGE: ./modify_lammps.sh <config.lammps>" && exit 1; fi
-sed -i orig -e 's|^variable frameworkDataFile string data\.mof.*$|variable frameworkDataFile string %s|' $1
+sed -i orig -e 's|^variable frameworkDataFile string mof\.data.*$|variable frameworkDataFile string %s|' $1
 sed -i ''   -e 's|^variable gasDataFile string gas\.data.*$|variable gasDataFile string %s|' $1
 sed -i ''   -e 's|^variable mofAtoms equal \d*.*$|variable mofAtoms equal %d|' $1
 sed -i ''   -e 's|^variable mofBonds equal \d*.*$|variable mofBonds equal %d|' $1
@@ -88,7 +92,6 @@ sed -i ''   -e 's|^variable mofImpropers equal \d*.*$|variable mofImpropers equa
         molecule_lammps_data_file_contents = packmol_to_lammps(xyz_data, charges, masses, 3, rel_bonds, rel_angles, box_dims[0:2], box_dims[2:4], box_dims[4:6])
         with open(gas_lammps_data_file, 'w') as wf:
             wf.write(molecule_lammps_data_file_contents)
-
 
     # archive files not needed to run simulation
     os.makedirs("tmp", exist_ok=True)
