@@ -13,7 +13,7 @@
 #print "Restart filename: ${restartFileName} "
 
 
-variable frameworkDataFile string data.mof
+variable frameworkDataFile string mof.data
 variable gasDataFile string gas.data
 
 variable simTemp equal 298
