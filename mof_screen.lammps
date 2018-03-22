@@ -74,7 +74,7 @@ pair_coeff ${atomO} ${atomO} 0.156989    2.80 # C
 pair_coeff ${atomC} ${atomC} 0.053655    3.05 # O
 bond_coeff ${bondOC} 1029.995 1.160 # O=C
 angle_coeff ${angleOCO} harmonic 56 180 # O=C=O
-group gasCenters id ${atomC} # use center carbon for GK
+group gasCenters type ${atomC} # use center carbon for GK
 
 # print "define params for N2"
 # mass ${atomN}   14.007
@@ -83,7 +83,7 @@ group gasCenters id ${atomC} # use center carbon for GK
 # bond_coeff ${atomNcentercharge} 1600 0.54485
 # pair_coeff ${atomN} ${atomN} 0.07154    3.310
 # pair_coeff ${atomNcentercharge} ${atomNcentercharge} 0.0 0.0
-# group gasCenters id ${atomNcentercharge} # use center charge for GK
+# group gasCenters type ${atomNcentercharge} # use center charge for GK
 
 thermo_style custom step vol temp press density etotal
 thermo         10000
@@ -102,7 +102,7 @@ label after_NPT_eq
 dump gaspos_dump gasCenters atom 10000 gas_coords.atoms
 dump dump_velocities gasCenters custom 10000 gas_coords.txt x y z vx vy vz
 
-# methodology from http://lammps.sandia.gov/doc/compute_vacf.html
+# VACF methodology from http://lammps.sandia.gov/doc/compute_vacf.html
 compute vacfGas gasCenters vacf
 fix             vacfVector all vector 10000 c_vacfGas[4]
 variable        diffusivity equal v_dt*trap(f_vacfVector)
@@ -111,7 +111,9 @@ thermo_style    custom step v_diffusivity
 # methodology from Hasan
 # fix	       JJT all ave/correlate $s $p $d v_Jx type auto file J0Jt_t.dat ave running
 
-
+# MSD methodoloy from http://lammps.sandia.gov/doc/compute_msd.html
+compute msdGas gasCenters msd
+fix  PE1 all ave/time 10000  1  10000 c_msdGas[1] c_msdGas[2] c_msdGas[3] c_msdGas[4] file gasMSD.txt
 
 #################################################################################################
 ### NVT equilibration
