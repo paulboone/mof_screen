@@ -17,7 +17,7 @@ variable frameworkDataFile string mof.data
 variable gasDataFile string gas.data
 
 variable simTemp equal 298
-
+variable dt = 1.0
 units           real
 atom_style      full
 boundary        p p p
@@ -33,7 +33,7 @@ dielectric      1.0
 special_bonds   lj/coul 0.0 0.0 1.0
 pair_modify     tail yes mix arithmetic
 box tilt        large
-timestep        1.0
+timestep        $(v_dt)
 
 
 
@@ -98,9 +98,20 @@ undump dump1
 
 label after_NPT_eq
 
-# output for CO2 GK
-dump gaspos_dump gasCenters atom 1 carbon_positions.atoms
-dump dump_velocities gasCenters custom 1 atom_coords.txt x y z vx vy vz
+# methodology from samir?
+dump gaspos_dump gasCenters atom 20000 carbon_positions.atoms
+dump dump_velocities gasCenters custom 20000 atom_coords.txt x y z vx vy vz
+
+# methodology from http://lammps.sandia.gov/doc/compute_vacf.html
+compute vacfGas gasCenters vacf
+fix             vacfVector all vector 20000 c_vacfGas[4]
+variable        diffusivity equal v_dt*trap(f_vacfVector)
+thermo_style    custom step v_diffusivity
+
+# methodology from Hasan
+# fix	       JJT all ave/correlate $s $p $d v_Jx type auto file J0Jt_t.dat ave running
+
+
 
 #################################################################################################
 ### NVT equilibration
@@ -110,7 +121,7 @@ print "** NVT EQUILIBRATION ** "
 
 
 
-thermo_style custom step vol temp press density etotal
+thermo_style custom step vol temp press density etotal v_diffusivity
 thermo         10000
 thermo_modify  flush yes
 restart        1000 nvt-eq.*.restart
@@ -129,7 +140,7 @@ label after_NVT_eq
 #if "${restartAtStep} > 2" then "jump SELF after_NVE_eq"
 #print "** NVE EQUILIBRATION ** "
 
-thermo_style custom step vol temp press density etotal
+thermo_style custom step vol temp press density etotal  v_diffusivity
 thermo         10000
 thermo_modify  flush yes
 restart        1000000 nve-eq.*.restart
@@ -150,7 +161,7 @@ label after_NVE_eq
 
 print "** NVE RUN ** "
 
-thermo_style custom step vol temp press density etotal
+thermo_style custom step vol temp press density etotal  v_diffusivity
 thermo         10000
 thermo_modify flush yes
 restart        1000000 nve.*.restart
