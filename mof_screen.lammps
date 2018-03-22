@@ -17,7 +17,7 @@ variable frameworkDataFile string mof.data
 variable gasDataFile string gas.data
 
 variable simTemp equal 298
-variable dt = 1.0
+variable dt equal 1.0
 units           real
 atom_style      full
 boundary        p p p
@@ -86,25 +86,25 @@ group gasCenters id ${atomC} # use center carbon for GK
 # group gasCenters id ${atomNcentercharge} # use center charge for GK
 
 thermo_style custom step vol temp press density etotal
-thermo         1000 #
+thermo         10000
 thermo_modify  flush yes
-restart        1000 npt-eq.*.restart
-dump dump1 all xyz 1000 npt-eq.dump.*.xyz
+restart        1000000 npt-eq.*.restart
+dump dump1 all xyz 1000000 npt-eq.dump.*.xyz
 
 fix INTALL all npt temp ${simTemp} ${simTemp} 50 iso 1 1 50
-run           2000 #1M
+run           1000000
 unfix         INTALL
 undump dump1
 
 label after_NPT_eq
 
-# methodology from samir?
-dump gaspos_dump gasCenters atom 20000 carbon_positions.atoms
-dump dump_velocities gasCenters custom 20000 atom_coords.txt x y z vx vy vz
+# dump for post verification (if necessary)
+dump gaspos_dump gasCenters atom 10000 gas_coords.atoms
+dump dump_velocities gasCenters custom 10000 gas_coords.txt x y z vx vy vz
 
 # methodology from http://lammps.sandia.gov/doc/compute_vacf.html
 compute vacfGas gasCenters vacf
-fix             vacfVector all vector 20000 c_vacfGas[4]
+fix             vacfVector all vector 10000 c_vacfGas[4]
 variable        diffusivity equal v_dt*trap(f_vacfVector)
 thermo_style    custom step v_diffusivity
 
@@ -124,8 +124,8 @@ print "** NVT EQUILIBRATION ** "
 thermo_style custom step vol temp press density etotal v_diffusivity
 thermo         10000
 thermo_modify  flush yes
-restart        1000 nvt-eq.*.restart
-dump XYZDUMP all xyz 1000 nvt-eq.dump.*.xyz
+restart        100000 nvt-eq.*.restart
+dump XYZDUMP all xyz 100000 nvt-eq.dump.*.xyz
 
 fix INTALL all nvt temp ${simTemp} ${simTemp} 50
 run           100000
@@ -147,7 +147,7 @@ restart        1000000 nve-eq.*.restart
 dump XYZDUMP all xyz 1000000 nve-eq.dump.*.xyz
 
 fix INTALL all nve
-run 10000 #00
+run 1000000
 unfix INTALL
 
 undump XYZDUMP
