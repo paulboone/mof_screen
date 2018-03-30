@@ -169,7 +169,7 @@ thermo_modify flush yes
 restart        1000000 nve.*.restart
 dump XYZDUMP all xyz 1000000 nve.dump.*.xyz
 fix INTALL all nve
-run           400000# 00
+run           4000000
 
 
 ##
