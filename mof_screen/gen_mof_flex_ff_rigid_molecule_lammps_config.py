@@ -51,8 +51,8 @@ def gen_mof_flex_ff_rigid_molecule_lammps_config(mof_path, gas_name, minimum_box
     with open("modify_lammps.sh", 'w') as f:
         modify_lammps_script = """#!/bin/bash
 if [ -z "$1" ]; then echo "USAGE: ./modify_lammps.sh <config.lammps>" && exit 1; fi
-sed -i orig -e 's|^variable frameworkDataFile string mof\.data.*$|variable frameworkDataFile string %s|' $1
-sed -i ''   -e 's|^variable gasDataFile string gas\.data.*$|variable gasDataFile string %s|' $1
+sed -i orig -e 's|^variable frameworkDataFile string .*$|variable frameworkDataFile string %s|' $1
+sed -i ''   -e 's|^variable gasDataFile string .*$|variable gasDataFile string %s|' $1
 sed -i ''   -e 's|^variable mofAtoms equal \d*.*$|variable mofAtoms equal %d|' $1
 sed -i ''   -e 's|^variable mofBonds equal \d*.*$|variable mofBonds equal %d|' $1
 sed -i ''   -e 's|^variable mofAngles equal \d*.*$|variable mofAngles equal %d|' $1
