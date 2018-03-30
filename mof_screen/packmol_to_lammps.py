@@ -17,6 +17,10 @@ def packmol_to_lammps(xyz_data, charges, masses, atoms_per_molecule, relative_bo
     atom_num = 1
     bond_num = 1
     angle_num = 1
+
+    num_bond_types = len(set([b[0] for b in relative_bonds]))
+    num_angle_types = len(set([b[0] for b in relative_angles]))
+
     if len(xyz_data) % atoms_per_molecule:
         print("WARNING: number of atoms is not evenly divisible by the atoms per molecule!")
     num_molecules = len(xyz_data) // atoms_per_molecule
@@ -49,9 +53,10 @@ def packmol_to_lammps(xyz_data, charges, masses, atoms_per_molecule, relative_bo
             angles += [" ".join(angle_tuple)]
             angle_num += 1
 
-    return generate_lammps_data_file(masses, atoms, bonds, angles, xb, yb, zb)
 
-def generate_lammps_data_file(masses, atoms, bonds, angles, xb, yb, zb):
+    return generate_lammps_data_file(masses, atoms, bonds, angles, xb, yb, zb, num_bond_types, num_angle_types)
+
+def generate_lammps_data_file(masses, atoms, bonds, angles, xb, yb, zb, num_bond_types, num_angle_types):
     mass_lines = [" ".join([str(i + 1),str(t)]) for i, t in enumerate(masses)]
 
     s = ""
@@ -67,7 +72,7 @@ def generate_lammps_data_file(masses, atoms, bonds, angles, xb, yb, zb):
 %d angle types
 0 dihedral types
 0 improper types
-""" % (len(masses), len(bonds), len(angles))
+""" % (len(masses), num_bond_types, num_angle_types)
 
     s += "%.5f %10.5f xlo xhi\n" % xb
     s += "%.5f %10.5f ylo yhi\n" % yb
