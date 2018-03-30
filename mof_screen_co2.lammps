@@ -60,10 +60,6 @@ variable atomC equal $(v_mofAtoms + 2)
 variable bondOC equal $(v_mofBonds + 1)
 variable angleOCO equal $(v_mofAngles + 1)
 
-# variable atomN equal $(v_mofAtoms + 1)
-# variable atomNcentercharge equal $(v_mofAtoms + 2)
-# variable bondNN equal $(v_mofBonds + 1)
-
 read_data       ${frameworkDataFile} group mof extra/atom/types 2 extra/bond/types 1 extra/angle/types 1
 read_data       ${gasDataFile} add append offset ${mofAtoms} ${mofBonds} ${mofAngles} ${mofDihedrals} ${mofImpropers}
 
@@ -75,15 +71,6 @@ pair_coeff ${atomC} ${atomC} 0.053655    3.05 # O
 bond_coeff ${bondOC} 1029.995 1.160 # O=C
 angle_coeff ${angleOCO} harmonic 56 180 # O=C=O
 group gasCenters type ${atomC} # use center carbon for GK
-
-# print "define params for N2"
-# mass ${atomN}   14.007
-# mass ${atomNcentercharge}   1e-10
-# bond_coeff ${bondNN} 1600 1.0897
-# bond_coeff ${atomNcentercharge} 1600 0.54485
-# pair_coeff ${atomN} ${atomN} 0.07154    3.310
-# pair_coeff ${atomNcentercharge} ${atomNcentercharge} 0.0 0.0
-# group gasCenters type ${atomNcentercharge} # use center charge for GK
 
 thermo_style custom step vol temp press density etotal
 thermo         10000
