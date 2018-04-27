@@ -6,7 +6,7 @@ class Parameters:
     def __init__(self, cif):
         # File options
         self.cif_file = cif
-        self.output_cif = False
+        self.output_cif = True
         self.output_raspa = False
 
         # Force field options
@@ -49,7 +49,7 @@ class Parameters:
         for v in vars(self):
             print('%-15s: %s' % (v, getattr(self, v)))
 
-def convert_to_lammps_data_file(params):
+def cif_to_ff_lammps_data(params):
     sim = LammpsSimulation(params)
     cell, graph = from_CIF(params.cif_file)
 

@@ -9,7 +9,7 @@ import pkg_resources
 import sys
 import subprocess
 
-from mof_screen.lammps_interface_wrappers import Parameters, convert_to_lammps_data_file
+from mof_screen.lammps_interface_wrappers import Parameters, cif_to_ff_lammps_data
 from mof_screen import pack_molecules_into_mof
 from mof_screen import packmol_to_lammps
 
@@ -21,7 +21,7 @@ def gen_mof_flex_ff_rigid_molecule_lammps_config(mof_path, gas_name, minimum_box
     params.force_field = "UFF4MOF"
 
     ### GENERATE LAMMPS DATA FILE FOR MOF WITH FORCE_FIELD PARAMS
-    num_types, supercell = convert_to_lammps_data_file(params)
+    num_types, supercell = cif_to_ff_lammps_data(params)
 
     if gas_name == "CO2":
         gas_lammps_data_file = "CO2.data"
