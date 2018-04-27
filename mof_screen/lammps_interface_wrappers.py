@@ -64,5 +64,5 @@ def convert_to_lammps_data_file(params):
         write_CIF(graph, cell)
 
     sim.write_lammps_files()
-    return [len(sim.unique_atom_types), len(sim.unique_bond_types), len(sim.unique_angle_types),
-            len(sim.unique_dihedral_types), len(sim.unique_improper_types)]
+    return [[len(sim.unique_atom_types), len(sim.unique_bond_types), len(sim.unique_angle_types),
+            len(sim.unique_dihedral_types), len(sim.unique_improper_types)], sim.cell.get_params()]

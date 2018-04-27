@@ -21,7 +21,7 @@ def gen_mof_flex_ff_rigid_molecule_lammps_config(mof_path, gas_name, minimum_box
     params.force_field = "UFF4MOF"
 
     ### GENERATE LAMMPS DATA FILE FOR MOF WITH FORCE_FIELD PARAMS
-    num_types = convert_to_lammps_data_file(params)
+    num_types, supercell = convert_to_lammps_data_file(params)
 
     if gas_name == "CO2":
         gas_lammps_data_file = "CO2.data"
@@ -73,8 +73,8 @@ sed -i ''   -e 's|^variable mofImpropers equal \d*.*$|variable mofImpropers equa
     ### GENERATE PACKMOL SCRIPT TO PACK MOF WITH N MOLECULES
     packmol_filename = "%s_%d_%s.packmol.txt" % (mof_name, num_molecules, gas_name)
     packed_xyz_filename = "mof_w_molecules.xyz"
-    with open(mof_lammps_data_file, 'r') as f:
-        packmol_script, box_dims = pack_molecules_into_mof(f, mof_name, gas_path, packed_xyz_filename, num_molecules)
+    packmol_script = pack_molecules_into_mof(mof_name, gas_path, packed_xyz_filename,
+                                    num_molecules, 2.0, supercell)
     with open(packmol_filename, 'w') as f:
         f.write(packmol_script)
 
@@ -93,7 +93,7 @@ sed -i ''   -e 's|^variable mofImpropers equal \d*.*$|variable mofImpropers equa
                 xyz_data.append(row_list)
 
         atoms_per_molecule = len(charges)
-        molecule_lammps_data_file_contents = packmol_to_lammps(xyz_data, charges, masses, atoms_per_molecule, rel_bonds, rel_angles, box_dims[0:2], box_dims[2:4], box_dims[4:6])
+        molecule_lammps_data_file_contents = packmol_to_lammps(xyz_data, charges, masses, atoms_per_molecule, rel_bonds, rel_angles)
         with open(gas_lammps_data_file, 'w') as wf:
             wf.write(molecule_lammps_data_file_contents)
 

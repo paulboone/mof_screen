@@ -1,6 +1,6 @@
 import sys
 
-def packmol_to_lammps(xyz_data, charges, masses, atoms_per_molecule, relative_bonds, relative_angles, xb, yb, zb):
+def packmol_to_lammps(xyz_data, charges, masses, atoms_per_molecule, relative_bonds, relative_angles):
     """
     Takes successive molecules, i.e. groups of atoms_per_molecule atoms from the XYZ data...
     Then for each atom in a molecule, create a tuple consisting of:
@@ -54,9 +54,13 @@ def packmol_to_lammps(xyz_data, charges, masses, atoms_per_molecule, relative_bo
             angle_num += 1
 
 
-    return generate_lammps_data_file(masses, atoms, bonds, angles, xb, yb, zb, num_bond_types, num_angle_types)
+    return generate_lammps_data_file(masses, atoms, bonds, angles, num_bond_types, num_angle_types)
 
-def generate_lammps_data_file(masses, atoms, bonds, angles, xb, yb, zb, num_bond_types, num_angle_types):
+def generate_lammps_data_file(masses, atoms, bonds, angles, num_bond_types, num_angle_types):
+    """
+    Generates a LAMMPS data file from the passed geometry information. This data file is not complete
+    and is expected to be loaded after another data file which defines the box boundaries, etc.
+    """
     mass_lines = [" ".join([str(i + 1),str(t)]) for i, t in enumerate(masses)]
 
     s = ""
@@ -74,9 +78,6 @@ def generate_lammps_data_file(masses, atoms, bonds, angles, xb, yb, zb, num_bond
 0 improper types
 """ % (len(masses), num_bond_types, num_angle_types)
 
-    s += "%.5f %10.5f xlo xhi\n" % xb
-    s += "%.5f %10.5f ylo yhi\n" % yb
-    s += "%.5f %10.5f zlo zhi\n" % zb
 
     s += "\n\n Masses\n\n" + "\n".join(mass_lines)
     s += "\n\n Atoms\n\n" + "\n".join(atoms)
