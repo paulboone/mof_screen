@@ -36,16 +36,8 @@ box tilt        large
 timestep        $(v_dt)
 
 
-
-
-
 #if "${restartAtStep} > 0" then "read_restart    ${restartFileName}"
-
-#################################################################################################
-### NPT equilibration on framework
-
 #if "${restartAtStep} > 0" then "jump SELF after_NPT_eq"
-#print "** NPT EQUILIBRATION on framework ** "
 
 print "reading MOF and gas data files..."
 
@@ -61,7 +53,7 @@ variable bondOC equal $(v_mofBonds + 1)
 variable angleOCO equal $(v_mofAngles + 1)
 
 read_data       ${frameworkDataFile} group mof extra/atom/types 2 extra/bond/types 1 extra/angle/types 1
-read_data       ${gasDataFile} add append offset ${mofAtoms} ${mofBonds} ${mofAngles} ${mofDihedrals} ${mofImpropers}
+read_data       ${gasDataFile} group gas add append offset ${mofAtoms} ${mofBonds} ${mofAngles} ${mofDihedrals} ${mofImpropers}
 
 print "define params for C02"
 mass ${atomO}   15.999
@@ -71,6 +63,12 @@ pair_coeff ${atomC} ${atomC} 0.053655    3.05 # O
 bond_coeff ${bondOC} 1029.995 1.160 # O=C
 angle_coeff ${angleOCO} harmonic 56 180 # O=C=O
 group gasCenters type ${atomC} # use center carbon for GK
+
+#################################################################################################
+### NPT equilibration on framework
+
+#if "${restartAtStep} > 0" then "jump SELF after_NVT_eq"
+print "** NPT EQUILIBRATION ** "
 
 thermo_style custom step vol temp press density etotal
 thermo         10000
@@ -85,9 +83,12 @@ undump dump1
 
 label after_NPT_eq
 
+#################################################################################################
+### NVT equilibration
+
 # dump for post verification (if necessary)
 dump gaspos_dump gasCenters atom 10000 gas_coords.atoms
-dump dump_velocities gasCenters custom 10000 gas_coords.txt x y z vx vy vz
+dump dump_velocities gasCenters custom 10000 gas_coords.txt xu yu zu vx vy vz
 
 # VACF methodology from http://lammps.sandia.gov/doc/compute_vacf.html
 compute vacfGas gasCenters vacf
@@ -102,14 +103,11 @@ thermo_style    custom step v_diffusivity
 compute msdGas gasCenters msd
 fix  PE1 all ave/time 10000  1  10000 c_msdGas[1] c_msdGas[2] c_msdGas[3] c_msdGas[4] file gasMSD.txt
 
-#################################################################################################
-### NVT equilibration
+# methodology from Samir (for MSD and VACF)
+dump trajectory_dump gas custom 10 gas.lammpstrj id type mol vx  vy  vz mass q xu yu zu
 
 #if "${restartAtStep} > 1" then "jump SELF after_NVT_eq"
 print "** NVT EQUILIBRATION ** "
-
-
-
 thermo_style custom step vol temp press density etotal v_diffusivity
 thermo         10000
 thermo_modify  flush yes
@@ -127,8 +125,7 @@ label after_NVT_eq
 ### NVE equilibration
 
 #if "${restartAtStep} > 2" then "jump SELF after_NVE_eq"
-#print "** NVE EQUILIBRATION ** "
-
+print "** NVE EQUILIBRATION ** "
 thermo_style custom step vol temp press density etotal  v_diffusivity
 thermo         10000
 thermo_modify  flush yes
@@ -149,7 +146,6 @@ label after_NVE_eq
 ### NVE
 
 print "** NVE RUN ** "
-
 thermo_style custom step vol temp press density etotal  v_diffusivity
 thermo         10000
 thermo_modify flush yes
