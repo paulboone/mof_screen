@@ -74,7 +74,7 @@ sed -i ''   -e 's|^variable mofImpropers equal \d*.*$|variable mofImpropers equa
     packmol_filename = "%s_%d_%s.packmol.txt" % (mof_name, num_molecules, gas_name)
     packed_xyz_filename = "mof_w_molecules.xyz"
     packmol_script = pack_molecules_into_mof(mof_name, gas_path, packed_xyz_filename,
-                                    num_molecules, 2.0, supercell)
+                                    num_molecules, 4.0, 2.0, supercell)
     with open(packmol_filename, 'w') as f:
         f.write(packmol_script)
 

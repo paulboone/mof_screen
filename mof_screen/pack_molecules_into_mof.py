@@ -6,8 +6,13 @@ import sys
 from angstrom.molecule import Cell
 from angstrom.geometry import Plane
 
-def pack_molecules_into_mof(mof_name, gas_path, output_name, num_molecules, tolerance, supercell):
-
+def pack_molecules_into_mof(mof_name, gas_path, output_name, num_molecules, boundary_tolerance, a2a_tolerance, supercell):
+    """
+    Two tolerances: (1) boundary_tolerance is the minimum distance between a gas molecule and one of
+    the planes defining the buondary, (2) a2a_tolerance is the atom-to-atom tolerance defining the
+    minimum distance between any two atoms.
+    """
+    
     cell = Cell(supercell)
     cell.calculate_vertices()
     pts = cell.vertices
@@ -28,19 +33,19 @@ def pack_molecules_into_mof(mof_name, gas_path, output_name, num_molecules, tole
     n = p.d / cell.b # normalize by length of b
     a, b, c, d = (p.a / n, p.b / n, p.c / n, p.d / n)
     print("Using plane: %+.2fx %+.2fy %+.2fz = %.2f" % (a, b, c, d))
-    plane_coefficients += [a, b, c, 0 + tolerance, a, b, c, d - tolerance]
+    plane_coefficients += [a, b, c, 0 + boundary_tolerance, a, b, c, d - boundary_tolerance]
 
     p = Plane(pts[1], pts[6], pts[4])
     n = p.d / cell.a # normalize by length of a
     a, b, c, d = (p.a / n, p.b / n, p.c / n, p.d / n)
     print("Using plane: %+.2fx %+.2fy %+.2fz = %.2f" % (a, b, c, d))
-    plane_coefficients += [a, b, c, 0 + tolerance, a, b, c, d - tolerance]
+    plane_coefficients += [a, b, c, 0 + boundary_tolerance, a, b, c, d - boundary_tolerance]
 
     p = Plane(pts[3], pts[5], pts[6])
     n = p.d / cell.c # normalize by length of c
     a, b, c, d = (p.a / n, p.b / n, p.c / n, p.d / n)
     print("Using plane: %+.2fx %+.2fy %+.2fz = %.2f" % (a, b, c, d))
-    plane_coefficients += [a, b, c, 0 + tolerance, a, b, c, d - tolerance]
+    plane_coefficients += [a, b, c, 0 + boundary_tolerance, a, b, c, d - boundary_tolerance]
 
     s = """
     tolerance %10.5f
@@ -65,7 +70,7 @@ def pack_molecules_into_mof(mof_name, gas_path, output_name, num_molecules, tole
       over plane %10.5f %10.5f %10.5f %10.5f
       below plane %10.5f %10.5f %10.5f %10.5f
     end structure
-    """ % (tolerance, output_name, mof_name, gas_path, num_molecules, *plane_coefficients)
+    """ % (a2a_tolerance, output_name, mof_name, gas_path, num_molecules, *plane_coefficients)
 
     return s
 
