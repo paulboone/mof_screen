@@ -8,6 +8,7 @@ setup(
     install_requires=[
         'lammps_interface',
         'lammps_tools',
+        'angstrom',
     ],
     include_package_data=True,
     packages=find_packages(),

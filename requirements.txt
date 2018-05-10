@@ -3,4 +3,6 @@ git+https://github.com/peteboyd/lammps_interface
 # lammps_tools is needed for a lmp_data_to_xyz script
 git+https://github.com/paulboone/lammps_tools
 
+git+https://github.com/kbsezginel/angstrom
+
 versioneer
