@@ -1,5 +1,6 @@
 import argparse
 import os
+import random
 import re
 import sys
 
@@ -12,7 +13,7 @@ def pack_molecules_into_mof(mof_name, gas_path, output_name, num_molecules, boun
     the planes defining the buondary, (2) a2a_tolerance is the atom-to-atom tolerance defining the
     minimum distance between any two atoms.
     """
-    
+
     cell = Cell(supercell)
     cell.calculate_vertices()
     pts = cell.vertices
@@ -46,9 +47,11 @@ def pack_molecules_into_mof(mof_name, gas_path, output_name, num_molecules, boun
     a, b, c, d = (p.a / n, p.b / n, p.c / n, p.d / n)
     print("Using plane: %+.2fx %+.2fy %+.2fz = %.2f" % (a, b, c, d))
     plane_coefficients += [a, b, c, 0 + boundary_tolerance, a, b, c, d - boundary_tolerance]
+    random_seed = random.random() * 100000000
 
     s = """
     tolerance %10.5f
+    seed %i
 
     output %s
     filetype xyz
@@ -70,7 +73,7 @@ def pack_molecules_into_mof(mof_name, gas_path, output_name, num_molecules, boun
       over plane %10.5f %10.5f %10.5f %10.5f
       below plane %10.5f %10.5f %10.5f %10.5f
     end structure
-    """ % (a2a_tolerance, output_name, mof_name, gas_path, num_molecules, *plane_coefficients)
+    """ % (a2a_tolerance, random_seed, output_name, mof_name, gas_path, num_molecules, *plane_coefficients)
 
     return s
 
