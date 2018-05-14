@@ -32,3 +32,12 @@ gen_mof_flex_ff_rigid_molecule_lammps_config IRMOF-1.cif CO2 -n 10
 cp ../../mof_screen_co2.lammps ./ && bash modify_lammps.sh ./mof_screen_co2.lammps
 lmp_serial < mof_screen_co2.lammps
 ```
+
+
+## example seds for converting XYZ atom indices to atom strings
+
+```
+# EDUSIF:
+sed 's/^1/O/g;s/^2/C/g;s/^3/H/g;s/^4/Zn/g;s/^5/O/g;s/^6/O/g;s/^7/C/g' ./npt-eq.dump.0.xyz
+
+```
