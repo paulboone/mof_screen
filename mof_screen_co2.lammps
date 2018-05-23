@@ -2,8 +2,9 @@
 # to restart, use -var restart <stage> <restart_filename>
 # stages:
 # - 0: start at beginning
-# - 1: start after NVT equilibration
-# - 2: start after NVE equilibration
+# - 1: start after NVT pre-equilibration
+# - 2: start after NVT equilibration
+# - 3: start after NVE equilibration
 
 variable restart index 0 'nothing'
 variable        restartAtStep equal ${restart}
@@ -33,12 +34,8 @@ dielectric      1.0
 special_bonds   lj/coul 0.0 0.0 1.0
 pair_modify     tail yes mix arithmetic
 box tilt        large
-timestep        $(v_dt)
-
 
 if "${restartAtStep} > 0" then "read_restart    ${restartFileName}"
-
-
 print "reading MOF and gas data files..."
 
 variable mofAtoms equal 5
@@ -67,50 +64,32 @@ angle_coeff ${angleOCO} harmonic 56 180 # O=C=O
 group gasCenters type ${atomC} # use center carbon for GK
 
 #################################################################################################
-### NPT equilibration on framework
+### NVT pre-equilibration
 
-if "${restartAtStep} > 0" then "jump SELF after_NPT_eq"
-print "** NPT EQUILIBRATION ** "
-
+if "${restartAtStep} > 0" then "jump SELF after_NVT_preeq"
+print "** NVT PRE-EQUILIBRATION ** "
+timestep        0.1 #fs
 thermo_style custom step vol temp press density etotal
 thermo         10000
 thermo_modify  flush yes
-restart        1000000 npt-eq.*.restart
-dump dump1 all xyz 1000000 npt-eq.dump.*.xyz
+restart        200000 nvt-preeq.*.restart
+dump XYZDUMP all xyz 200000 nvt-preeq.dump.*.xyz
 
-fix INTALL all npt temp ${simTemp} ${simTemp} 50 iso 1 1 50
-run           1000000
-unfix         INTALL
-undump dump1
+fix INTALL all nvt temp ${simTemp} ${simTemp} 50
+run           200000
+unfix INTALL
+undump XYZDUMP
 
-label after_NPT_eq
+label after_NVT_preeq
+
 
 #################################################################################################
 ### NVT equilibration
 
-# dump for post verification (if necessary)
-dump gaspos_dump gasCenters atom 10000 gas_coords.atoms
-dump dump_velocities gasCenters custom 10000 gas_coords.txt xu yu zu vx vy vz
-
-# VACF methodology from http://lammps.sandia.gov/doc/compute_vacf.html
-compute vacfGas gasCenters vacf
-fix             vacfVector all vector 10000 c_vacfGas[4]
-variable        diffusivity equal v_dt*trap(f_vacfVector)
-thermo_style    custom step v_diffusivity
-
-# methodology from Hasan
-# fix	       JJT all ave/correlate $s $p $d v_Jx type auto file J0Jt_t.dat ave running
-
-# MSD methodoloy from http://lammps.sandia.gov/doc/compute_msd.html
-compute msdGas gasCenters msd
-fix  PE1 all ave/time 10000  1  10000 c_msdGas[1] c_msdGas[2] c_msdGas[3] c_msdGas[4] file gasMSD.txt
-
-# methodology from Samir (for MSD and VACF)
-dump trajectory_dump gas custom 10 gas.lammpstrj id type mol vx  vy  vz mass q xu yu zu
-
 if "${restartAtStep} > 1" then "jump SELF after_NVT_eq"
 print "** NVT EQUILIBRATION ** "
-thermo_style custom step vol temp press density etotal v_diffusivity
+timestep        $(v_dt)
+thermo_style custom step vol temp press density etotal
 thermo         10000
 thermo_modify  flush yes
 restart        100000 nvt-eq.*.restart
@@ -128,33 +107,44 @@ label after_NVT_eq
 
 if "${restartAtStep} > 2" then "jump SELF after_NVE_eq"
 print "** NVE EQUILIBRATION ** "
-thermo_style custom step vol temp press density etotal  v_diffusivity
+thermo_style custom step vol temp press density etotal
 thermo         10000
 thermo_modify  flush yes
-restart        1000000 nve-eq.*.restart
-dump XYZDUMP all xyz 1000000 nve-eq.dump.*.xyz
+restart        50000 nve-eq.*.restart
+dump XYZDUMP all xyz 50000 nve-eq.dump.*.xyz
 
 fix INTALL all nve
-run 1000000
+run 50000
 unfix INTALL
 
 undump XYZDUMP
 
 label after_NVE_eq
 
-
-
 #################################################################################################
 ### NVE
 
+## TODO (before production): consider removing VACF
+# VACF methodology from http://lammps.sandia.gov/doc/compute_vacf.html
+compute vacfGas gasCenters vacf
+fix             vacfVector all vector 10000 c_vacfGas[4]
+variable        diffusivity equal v_dt*trap(f_vacfVector)
+thermo_style    custom step v_diffusivity
+
+# methodology from Samir (for MSD and VACF)
+dump trajectory_dump gas custom 10 gas.lammpstrj id type mol mass xu yu zu
+
+## TODO (before production): consider removing vacfgas[4]
 print "** NVE RUN ** "
-thermo_style custom step vol temp press density etotal  v_diffusivity
+thermo_style custom step vol temp press density etotal c_vacfGas[4] v_diffusivity
 thermo         10000
 thermo_modify flush yes
 restart        1000000 nve.*.restart
 dump XYZDUMP all xyz 1000000 nve.dump.*.xyz
 fix INTALL all nve
 run           40000000
+
+##TODO: decide on total timesteps
 
 
 ##
