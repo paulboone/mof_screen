@@ -37,7 +37,21 @@ lmp_serial < mof_screen_co2.lammps
 ## example seds for converting XYZ atom indices to atom strings
 
 ```
-# EDUSIF:
+# ATOTIM + CO2:
+sed 's/^1/V/g;s/^2/H/g;s/^3/C/g;s/^4/O/g;s/^5/O/g;s/^6/C/g' ./npt-eq.dump.0.xyz
+
+# FIQCEN (HKUST-1) + CO2:
+sed 's/^1/Cu/g;s/^2/H/g;s/^3/C/g;s/^4/O/g;s/^5/O/g;s/^6/C/g' ./npt-eq.dump.0.xyz
+
+# EDUSIF(IRMOF-1) + CO2:
 sed 's/^1/O/g;s/^2/C/g;s/^3/H/g;s/^4/Zn/g;s/^5/O/g;s/^6/O/g;s/^7/C/g' ./npt-eq.dump.0.xyz
 
+# UGEPEB + CO2:
+sed 's/^1/Cu/g;s/^2/H/g;s/^3/C/g;s/^4/N/g;s/^5/O/g;s/^6/O/g;s/^7/O/g;s/^8/C/g' ./npt-eq.dump.0.xyz
+
+# VONBUW + CO2:
+sed 's/^1/Zn/g;s/^2/H/g;s/^3/C/g;s/^4/C/g;s/^5/N/g;s/^6/O/g;s/^7/O/g;s/^8/O/g;s/^9/C/g' ./npt-eq.dump.0.xyz
+
+# ZIF-8 + CO2:
+sed 's/^1/Zn/g;s/^2/H/g;s/^3/C/g;s/^4/C/g;s/^5/N/g;s/^6/O/g;s/^7/C/g' ./npt-eq.dump.0.xyz
 ```
