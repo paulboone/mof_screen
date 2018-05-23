@@ -26,6 +26,8 @@ gen_mof_flex_ff_rigid_molecule_lammps_config --help
 
 ## Examples:
 
+One-off:
+
 ```
 cd examples/CO2_IRMOF-1/
 gen_mof_flex_ff_rigid_molecule_lammps_config IRMOF-1.cif CO2 -n 10
@@ -33,6 +35,12 @@ cp ../../mof_screen_co2.lammps ./ && bash modify_lammps.sh ./mof_screen_co2.lamm
 lmp_serial < mof_screen_co2.lammps
 ```
 
+Or to generate a batch of config files:
+
+* make sure you have a directory called 'core-mof-1.0-ddec' with the actual ddec mofs in it.
+* create a directory in this dir
+* edit mofs.txt to contain the mofs you want to test and the # of CO2s per mof
+* from the directory, run `../generate_configs.sh < ../mofs.txt`
 
 ## example seds for converting XYZ atom indices to atom strings
 
