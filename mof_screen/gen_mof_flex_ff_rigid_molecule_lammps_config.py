@@ -6,6 +6,7 @@
 import argparse
 import os
 import pkg_resources
+import random
 import sys
 import subprocess
 
@@ -53,6 +54,7 @@ def gen_mof_flex_ff_rigid_molecule_lammps_config(mof_path, gas_name, minimum_box
 
     ### output LAMMPS modification script
     with open("modify_lammps.sh", 'w') as f:
+        random_seed = random.randint(0, 999999999)
         modify_lammps_script = """#!/bin/bash
 if [ -z "$1" ]; then echo "USAGE: ./modify_lammps.sh <config.lammps>" && exit 1; fi
 sed -i orig -e 's|^variable frameworkDataFile string .*$|variable frameworkDataFile string %s|' $1
@@ -62,7 +64,8 @@ sed -i ''   -e 's|^variable mofBonds equal \d*.*$|variable mofBonds equal %d|' $
 sed -i ''   -e 's|^variable mofAngles equal \d*.*$|variable mofAngles equal %d|' $1
 sed -i ''   -e 's|^variable mofDihedrals equal \d*.*$|variable mofDihedrals equal %d|' $1
 sed -i ''   -e 's|^variable mofImpropers equal \d*.*$|variable mofImpropers equal %d|' $1
-""" % tuple([mof_lammps_data_file, gas_lammps_data_file] + num_types)
+sed -i ''   -e 's|^variable randomSeed equal \d*.*$|variable randomSeed equal %d|' $1
+""" % tuple([mof_lammps_data_file, gas_lammps_data_file] + num_types + [random_seed])
         f.write(modify_lammps_script)
 
 

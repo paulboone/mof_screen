@@ -47,7 +47,7 @@ def pack_molecules_into_mof(mof_name, gas_path, output_name, num_molecules, boun
     a, b, c, d = (p.a / n, p.b / n, p.c / n, p.d / n)
     print("Using plane: %+.2fx %+.2fy %+.2fz = %.2f" % (a, b, c, d))
     plane_coefficients += [a, b, c, 0 + boundary_tolerance, a, b, c, d - boundary_tolerance]
-    random_seed = random.random() * 100000000
+    random_seed = random.randint(0,999999999)
 
     s = """
     tolerance %10.5f

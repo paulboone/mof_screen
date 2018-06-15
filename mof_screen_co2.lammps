@@ -50,8 +50,10 @@ variable bondOC equal $(v_mofBonds + 1)
 variable angleOCO equal $(v_mofAngles + 1)
 
 if "${restartAtStep} > 0" then "jump SELF after_read_data"
+variable randomSeed equal 123123
 read_data       ${frameworkDataFile} group mof extra/atom/types 2 extra/bond/types 1 extra/angle/types 1
 read_data       ${gasDataFile} group gas add append offset ${mofAtoms} ${mofBonds} ${mofAngles} ${mofDihedrals} ${mofImpropers}
+velocity        all create ${simTemp} ${randomSeed} dist gaussian
 label after_read_data
 
 print "define params for C02"
