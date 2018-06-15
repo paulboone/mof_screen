@@ -5,6 +5,7 @@
 
 import argparse
 import os
+import math
 import pkg_resources
 import random
 import sys
@@ -14,7 +15,7 @@ from mof_screen.lammps_interface_wrappers import Parameters, cif_to_ff_lammps_da
 from mof_screen import pack_molecules_into_mof
 from mof_screen import packmol_to_lammps
 
-def gen_mof_flex_ff_rigid_molecule_lammps_config(mof_path, gas_name, minimum_box_dimension=12.5, num_molecules=1):
+def gen_mof_flex_ff_rigid_molecule_lammps_config(mof_path, gas_name, minimum_box_dimension=12.5, molecules_per_unit_cell=1):
     mof_name, _ = os.path.splitext(os.path.basename(mof_path))
 
     params = Parameters(mof_path)
@@ -22,7 +23,10 @@ def gen_mof_flex_ff_rigid_molecule_lammps_config(mof_path, gas_name, minimum_box
     params.force_field = "UFF4MOF"
 
     ### GENERATE LAMMPS DATA FILE FOR MOF WITH FORCE_FIELD PARAMS
-    num_types, supercell = cif_to_ff_lammps_data(params)
+    num_types, supercell_params, supercell = cif_to_ff_lammps_data(params)
+    num_unitcells = supercell[0]*supercell[1]*supercell[2]
+    num_molecules = math.floor(molecules_per_unit_cell * num_unitcells)
+    print("supercell, num_unitcells, molecules_per_unit_cell, num_molecules: ", supercell, num_unitcells, molecules_per_unit_cell, num_molecules)
 
     if gas_name == "CO2":
         gas_lammps_data_file = "CO2.data"
@@ -77,7 +81,7 @@ sed -i ''   -e 's|^variable randomSeed equal \d*.*$|variable randomSeed equal %d
     packmol_filename = "%s_%d_%s.packmol.txt" % (mof_name, num_molecules, gas_name)
     packed_xyz_filename = "mof_w_molecules.xyz"
     packmol_script = pack_molecules_into_mof(mof_name, gas_path, packed_xyz_filename,
-                                    num_molecules, 4.0, 2.0, supercell)
+                                    num_molecules, 4.0, 2.0, supercell_params)
     with open(packmol_filename, 'w') as f:
         f.write(packmol_script)
 
@@ -113,10 +117,10 @@ def cmdline():
     parser.add_argument('mof_path', help="Path to MOF CIF with P1 symmetry")
     parser.add_argument('gas_name', help="name of gas: CO2 or N2")
     parser.add_argument('--minimum-box-dimension', '-d', default=12.5, help="minimum box dimension (angstroms) of extended unit cell")
-    parser.add_argument('--num-molecules', '-n', default=1, help="number of molecules to pack into MOF")
+    parser.add_argument('--molecules-per-unit-cell', '-n', default=1.0, help="number of molecules per unit cell to pack into MOF")
     args = parser.parse_args()
 
     gen_mof_flex_ff_rigid_molecule_lammps_config(args.mof_path, args.gas_name,
         minimum_box_dimension=args.minimum_box_dimension,
-        num_molecules=int(args.num_molecules)
+        molecules_per_unit_cell=float(args.molecules_per_unit_cell)
     )

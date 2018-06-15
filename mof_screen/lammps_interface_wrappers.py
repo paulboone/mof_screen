@@ -54,6 +54,8 @@ def cif_to_ff_lammps_data(params):
     cell, graph = from_CIF(params.cif_file)
 
     sim.set_cell(cell)
+    supercell = sim.cell.minimum_supercell(sim.options.cutoff)
+
     sim.set_graph(graph)
     sim.split_graph()
     sim.assign_force_fields()
@@ -65,4 +67,4 @@ def cif_to_ff_lammps_data(params):
 
     sim.write_lammps_files()
     return [[len(sim.unique_atom_types), len(sim.unique_bond_types), len(sim.unique_angle_types),
-            len(sim.unique_dihedral_types), len(sim.unique_improper_types)], sim.cell.get_params()]
+            len(sim.unique_dihedral_types), len(sim.unique_improper_types)], sim.cell.get_params(), supercell]
