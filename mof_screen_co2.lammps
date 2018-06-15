@@ -144,9 +144,6 @@ thermo_modify flush yes
 restart        1000000 nve.*.restart
 dump XYZDUMP all xyz 1000000 nve.dump.*.xyz
 fix INTALL all nve
-run           40000000
-
-##TODO: decide on total timesteps
-
+run           15000000
 
 ##
