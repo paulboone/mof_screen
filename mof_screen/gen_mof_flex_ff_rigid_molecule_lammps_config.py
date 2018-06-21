@@ -26,7 +26,8 @@ def gen_mof_flex_ff_rigid_molecule_lammps_config(mof_path, gas_name, minimum_box
     num_types, supercell_params, supercell = cif_to_ff_lammps_data(params)
     num_unitcells = supercell[0]*supercell[1]*supercell[2]
     num_molecules = math.floor(molecules_per_unit_cell * num_unitcells)
-    print("supercell, num_unitcells, molecules_per_unit_cell, num_molecules: ", supercell, num_unitcells, molecules_per_unit_cell, num_molecules)
+    print("supercell, num_unitcells, molecules_per_unit_cell: ", supercell, num_unitcells, molecules_per_unit_cell)
+    print("num_molecules: ", num_molecules)
 
     if gas_name == "CO2":
         gas_lammps_data_file = "CO2.data"
