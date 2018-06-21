@@ -9,30 +9,36 @@
 #
 # currently directories are hardcoded, so create a directory in this directory, cd into it, and
 # run this command from there.
-
-set -e
-
-num_per_mof=$1
-
-while IFS='$\n' read -r line; do
+filename=$1
+num_per_mof=$2
+exec 3<$filename
+while IFS='$\n' read -u 3 -r line; do
   mof=${line% *}
   num=${line#* }
   for i in `seq 1 ${num_per_mof}`; do
     mkdir -p $mof.$i
     cd $mof.$i
     if [ -e ../../core-mof-1.0-ddec/${mof}.cif ]; then
-      echo "${mof}.$i"
+      results="${mof}.$i"
       cp ../../core-mof-1.0-ddec/${mof}.cif ./$mof.cif
     else
-      echo "${mof}.${i} (using $(cd ../../core-mof-1.0-ddec/ && ls -1 ${mof}_*.cif))"
+      results="${mof}.${i} (using $(cd ../../core-mof-1.0-ddec/ && ls -1 ${mof}_*.cif))"
       cp ../../core-mof-1.0-ddec/${mof}_*.cif ./$mof.cif
     fi;
 
-    gen_mof_flex_ff_rigid_molecule_lammps_config ./$mof.cif CO2 -n $num > gen_config.log
-    mv gen_config.log ./tmp
-    cp ../../mof_screen_co2.lammps ./ && bash modify_lammps.sh ./mof_screen_co2.lammps
-    sed -e "s|^#SBATCH --job-name=*.*$|#SBATCH --job-name=$mof.$i|" ../../screen.slurm > screen.slurm
+    if gen_mof_flex_ff_rigid_molecule_lammps_config ./$mof.cif CO2 -n $num > gen_config.log; then
+      mv gen_config.log ./tmp
+      cp ../../mof_screen_co2.lammps ./ && bash modify_lammps.sh ./mof_screen_co2.lammps
+      sed -e "s|^#SBATCH --job-name=*.*$|#SBATCH --job-name=$mof.$i|" ../../screen.slurm > screen.slurm
+      results="$results: OK"
+      echo "$results"
+      cd ..
+    else
+      results="$results: FAILED"
+      echo "$results"
+      cd ..
+      break
+    fi
 
-    cd ..
   done
 done
