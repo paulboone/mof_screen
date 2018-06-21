@@ -30,7 +30,7 @@ One-off:
 
 ```
 cd examples/CO2_IRMOF-1/
-gen_mof_flex_ff_rigid_molecule_lammps_config IRMOF-1.cif CO2 -n 10
+gen_mof_flex_ff_rigid_molecule_lammps_config IRMOF-1.cif CO2 -n 1.345
 cp ../../mof_screen_co2.lammps ./ && bash modify_lammps.sh ./mof_screen_co2.lammps
 lmp_serial < mof_screen_co2.lammps
 ```
