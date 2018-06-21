@@ -51,6 +51,7 @@ class Parameters:
 
 def cif_to_ff_lammps_data(params):
     sim = LammpsSimulation(params)
+    sim.options.mol_ff = "UFF"
     cell, graph = from_CIF(params.cif_file)
 
     sim.set_cell(cell)
