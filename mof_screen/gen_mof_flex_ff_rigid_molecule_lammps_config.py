@@ -29,6 +29,25 @@ def gen_mof_flex_ff_rigid_molecule_lammps_config(mof_path, gas_name, minimum_box
     print("supercell, num_unitcells, molecules_per_unit_cell: ", supercell, num_unitcells, molecules_per_unit_cell)
     print("num_molecules: ", num_molecules)
 
+    # smit code always outputs lammps data file with name: data.{mof_name}; move this
+    mof_lammps_data_file = "%s.data" % mof_name
+    os.rename("data.%s" % mof_name, mof_lammps_data_file)
+
+    os.makedirs("tmp", exist_ok=True)
+    os.rename("in.%s" % mof_name, "tmp/in.%s" % mof_name)
+
+    if gas_name is None:
+        ### output LAMMPS modification script
+        with open("modify_lammps.sh", 'w') as f:
+            random_seed = random.randint(0, 999999999)
+            modify_lammps_script = """#!/bin/bash
+if [ -z "$1" ]; then echo "USAGE: ./modify_lammps.sh <config.lammps>" && exit 1; fi
+sed -i orig -e 's|^variable frameworkDataFile string .*$|variable frameworkDataFile string %s|' $1
+sed -i ''   -e 's|^variable randomSeed equal \d*.*$|variable randomSeed equal %d|' $1
+""" % tuple([mof_lammps_data_file, random_seed])
+            f.write(modify_lammps_script)
+        return
+
     if gas_name == "CO2":
         gas_lammps_data_file = "CO2.data"
         charges = [-0.35, 0.7, -0.35]
@@ -52,10 +71,6 @@ def gen_mof_flex_ff_rigid_molecule_lammps_config(mof_path, gas_name, minimum_box
         os.exit(1)
 
     gas_path = pkg_resources.resource_filename(__name__, "%s.xyz" % gas_name)
-
-    # smit code always outputs lammps data file with name: data.{mof_name}; move this
-    mof_lammps_data_file = "%s.data" % mof_name
-    os.rename("data.%s" % mof_name, mof_lammps_data_file)
 
     ### output LAMMPS modification script
     with open("modify_lammps.sh", 'w') as f:
@@ -106,8 +121,6 @@ sed -i ''   -e 's|^variable randomSeed equal \d*.*$|variable randomSeed equal %d
             wf.write(molecule_lammps_data_file_contents)
 
     # archive files not needed to run simulation
-    os.makedirs("tmp", exist_ok=True)
-    os.rename("in.%s" % mof_name, "tmp/in.%s" % mof_name)
     os.rename(packed_xyz_filename, "tmp/%s" % packed_xyz_filename)
     os.rename(mof_xyz_filename, "tmp/%s" % mof_xyz_filename)
     os.rename(packmol_filename, "tmp/%s" % packmol_filename)
@@ -116,7 +129,7 @@ sed -i ''   -e 's|^variable randomSeed equal \d*.*$|variable randomSeed equal %d
 def cmdline():
     parser = argparse.ArgumentParser("./gen_mof_flex_ff_rigid_molecule_lammps_config.py")
     parser.add_argument('mof_path', help="Path to MOF CIF with P1 symmetry")
-    parser.add_argument('gas_name', help="name of gas: CO2 or N2")
+    parser.add_argument('--gas_name', help="name of gas: CO2/N2/N2pc")
     parser.add_argument('--minimum-box-dimension', '-d', default=12.5, help="minimum box dimension (angstroms) of extended unit cell")
     parser.add_argument('--molecules-per-unit-cell', '-n', default=1.0, help="number of molecules per unit cell to pack into MOF")
     args = parser.parse_args()
