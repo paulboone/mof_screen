@@ -23,11 +23,13 @@ def gen_mof_flex_ff_rigid_molecule_lammps_config(mof_path, gas_name, minimum_box
     params.force_field = "UFF4MOF"
 
     ### GENERATE LAMMPS DATA FILE FOR MOF WITH FORCE_FIELD PARAMS
-    num_types, supercell_params, supercell = cif_to_ff_lammps_data(params)
+    num_types, supercell_params, supercell, atom_types = cif_to_ff_lammps_data(params)
     num_unitcells = supercell[0]*supercell[1]*supercell[2]
     num_molecules = math.floor(molecules_per_unit_cell * num_unitcells)
+    atom_types_string = " ".join(atom_types)
     print("supercell, num_unitcells, molecules_per_unit_cell: ", supercell, num_unitcells, molecules_per_unit_cell)
     print("num_molecules: ", num_molecules)
+
 
     # smit code always outputs lammps data file with name: data.{mof_name}; move this
     mof_lammps_data_file = "%s.data" % mof_name
@@ -44,7 +46,8 @@ def gen_mof_flex_ff_rigid_molecule_lammps_config(mof_path, gas_name, minimum_box
 if [ -z "$1" ]; then echo "USAGE: ./modify_lammps.sh <config.lammps>" && exit 1; fi
 sed -i orig -e 's|^variable frameworkDataFile string .*$|variable frameworkDataFile string %s|' $1
 sed -i ''   -e 's|^variable randomSeed equal \d*.*$|variable randomSeed equal %d|' $1
-""" % tuple([mof_lammps_data_file, random_seed])
+sed -i ''   -e 's|^dump_modify \([a-zA-Z0-9]*\) element .*$|dump_modify \\1 element %s|' $1
+""" % tuple([mof_lammps_data_file, random_seed, atom_types_string])
             f.write(modify_lammps_script)
         return
 

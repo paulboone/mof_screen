@@ -67,5 +67,9 @@ def cif_to_ff_lammps_data(params):
         write_CIF(graph, cell)
 
     sim.write_lammps_files()
+
+    smit_atom_types = sim.unique_atom_types
+    atom_types = [v[1]['element'] for k,v in smit_atom_types.items()]
+
     return [[len(sim.unique_atom_types), len(sim.unique_bond_types), len(sim.unique_angle_types),
-            len(sim.unique_dihedral_types), len(sim.unique_improper_types)], sim.cell.get_params(), supercell]
+            len(sim.unique_dihedral_types), len(sim.unique_improper_types)], sim.cell.get_params(), supercell, atom_types]
