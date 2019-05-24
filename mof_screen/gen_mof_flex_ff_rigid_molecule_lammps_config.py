@@ -44,9 +44,9 @@ def gen_mof_flex_ff_rigid_molecule_lammps_config(mof_path, gas_name, minimum_box
             random_seed = random.randint(0, 999999999)
             modify_lammps_script = """#!/bin/bash
 if [ -z "$1" ]; then echo "USAGE: ./modify_lammps.sh <config.lammps>" && exit 1; fi
-sed -i orig -e 's|^variable frameworkDataFile string .*$|variable frameworkDataFile string %s|' $1
-sed -i ''   -e 's|^variable randomSeed equal \d*.*$|variable randomSeed equal %d|' $1
-sed -i ''   -e 's|^dump_modify \([a-zA-Z0-9]*\) element .*$|dump_modify \\1 element %s|' $1
+sed -iorig -e 's|^variable frameworkDataFile string .*$|variable frameworkDataFile string %s|' $1
+sed -i -e 's|^variable randomSeed equal \d*.*$|variable randomSeed equal %d|' $1
+sed -i -e 's|^dump_modify \([a-zA-Z0-9]*\) element .*$|dump_modify \\1 element %s|' $1
 """ % tuple([mof_lammps_data_file, random_seed, atom_types_string])
             f.write(modify_lammps_script)
         return
